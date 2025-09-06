@@ -1,0 +1,78 @@
+{
+  "name": "seadix",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "node-gyp rebuild",
+    "build:debug": "node-gyp rebuild --debug",
+    "build:ts": "tsc",
+    "build:all": "npm run build && npm run build:ts",
+    "clean": "node-gyp clean",
+    "dev": "npm run build && nodemon lib/index.ts",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "benchmark": "ts-node benchmark/simple-benchmark.ts",
+    "benchmark:full": "ts-node benchmark/benchmark.ts",
+    "format:cc": "find . -name \"*.cc\" -exec clang-format -i {} \\;",
+    "format:all": "find . \\( -name \"*.cc\" -o -name \"*.cpp\" -o -name \"*.h\" \\) -exec clang-format -i {} \\;",
+    "format": "find . \\( -name \"*.cc\" -o -name \"*.cpp\" -o -name \"*.h\" \\) -exec clang-format -i {} \\;",
+    "cpp:test:build": "make -f Makefile.test",
+    "cpp:test:run": "make -f Makefile.test run",
+    "cpp:test:clean": "make -f Makefile.test clean",
+    "cpp:test:debug": "make -f Makefile.test debug",
+    "cpp:test:release": "make -f Makefile.test release",
+    "cpp:test:o2": "make -f Makefile.test o2",
+    "cpp:test:o0": "make -f Makefile.test o0",
+    "cpp:test:help": "make -f Makefile.test help",
+	"build-test-bench": "npm run build:all && npm run test && npm run benchmark:full"
+  },
+  "gypfile": true,
+  "keywords": [
+    "radix",
+    "trie",
+    "prefix",
+    "search",
+    "autocomplete",
+    "performance"
+  ],
+  "author": "SeaDix Team",
+  "license": "ISC",
+  "description": "A Radix Trie implementation for Node.js built with C++",
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.3.0",
+    "eslint": "^9.33.0",
+    "jest": "^30.0.5",
+    "nodemon": "^3.1.10",
+    "rimraf": "^6.0.1",
+    "ts-jest": "^29.4.1",
+    "ts-node": "^10.9.2",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.40.0"
+  },
+  "dependencies": {
+    "node-addon-api": "^8.5.0"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "roots": [
+      "<rootDir>/tests"
+    ],
+    "testMatch": [
+      "**/*.test.ts"
+    ],
+    "collectCoverageFrom": [
+      "lib/**/*.{ts,js}",
+      "!lib/**/*.d.ts"
+    ],
+    "transform": {
+      "^.+\\.ts$": "ts-jest"
+    },
+    "moduleFileExtensions": ["ts", "js", "json", "node"],
+    "testEnvironmentOptions": {
+      "url": "http://localhost"
+    }
+  }
+}

@@ -1,0 +1,6 @@
+.ccls-cache
+node_modules
+build
+dist
+.vscode
+test_performance

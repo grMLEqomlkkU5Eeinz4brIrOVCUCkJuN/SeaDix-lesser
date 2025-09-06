@@ -1,0 +1,311 @@
+
+> seadix@1.0.0 benchmark:full
+> ts-node benchmark/benchmark.ts
+
+SeaDix Performance Benchmarks
+=============================
+
+=== Insertion Performance ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+Short words (2 chars)         4.66           0.0047         214,539
+Medium words (5 chars)        2.75           0.0027         363,749
+Long words (34 chars)         2.39           0.0024         418,193
+Prefix words (11 chars)       2.00           0.0020         500,180
+Random words (10 chars)       2.85           0.0029         350,362
+
+=== Dataset Traversal Performance ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+No common prefixes (5 words)  0.55           0.0011         911,697
+Common prefixes (5 words)     0.63           0.0013         795,020
+Mixed prefixes (6 words)      0.70           0.0012         856,949
+Deep prefix sharing (6 words) 0.82           0.0014         732,643
+
+=== Search Performance - Small Dataset ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+Search Existing (10x)         0.20           0.0203         49,382
+Search Non-existing (10x)     0.13           0.0125         79,778
+Single Search (1000x)         0.86           0.0009         1,157,626
+
+=== Search Performance - Medium Dataset ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+Search Existing (10x)         0.46           0.0460         21,755
+Search Non-existing (10x)     0.44           0.0439         22,789
+Single Search (1000x)         0.60           0.0006         1,653,354
+
+=== Search Performance - Large Dataset ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+Search Existing (10x)         5.92           0.5917         1,690
+Search Non-existing (10x)     5.87           0.5874         1,703
+Single Search (1000x)         0.37           0.0004         2,722,422
+
+=== Delete Performance - Small Dataset ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+Delete Existing               0.11           0.0115         87,273
+Delete Non-existing           0.05           0.0055         182,635
+Single Delete (1000x)         0.82           0.0008         1,218,448
+
+=== Delete Performance - Medium Dataset ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+Delete Existing               0.03           0.0005         1,893,198
+Delete Non-existing           0.03           0.0006         1,812,273
+Single Delete (1000x)         0.57           0.0006         1,757,401
+
+=== Delete Performance - Large Dataset ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+Delete Existing               0.86           0.0009         1,166,935
+Delete Non-existing           1.67           0.0017         600,080
+Single Delete (1000x)         0.57           0.0006         1,766,856
+
+=== Loop Performance - Medium Dataset ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+forEach loop (10x)            0.68           0.0012         855,469
+for...of loop (10x)           0.79           0.0014         738,347
+for loop (10x)                0.68           0.0012         853,805
+
+=== Utility Operations - Medium Dataset ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+size() (10000x)               3.25           0.0003         3,074,648
+isEmpty() (10000x)            2.56           0.0003         3,912,287
+getWordsWithPrefix('') (100x) 2.97           0.0297         33,716
+getStats() (1000x)            35.15          0.0352         28,446
+
+=== Prefix Performance - Small Dataset ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+startsWith (100x)             1.63           0.0018         552,942
+getWordsWithPrefix (10x)      0.63           0.0070         143,191
+
+=== Prefix Performance - Medium Dataset ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+startsWith (100x)             0.65           0.0007         1,393,417
+getWordsWithPrefix (10x)      0.65           0.0072         138,007
+
+=== Prefix Performance - Large Dataset ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+startsWith (100x)             0.56           0.0006         1,602,904
+getWordsWithPrefix (10x)      5.32           0.0591         16,910
+
+=== Case Sensitivity Performance ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+Case Sensitive Insert         0.11           0.0019         535,036
+Case Insensitive Insert       0.14           0.0023         427,149
+Case Sensitive Search (10x)   0.45           0.0008         1,301,663
+Case Insensitive Search (10x) 0.57           0.0010         1,020,509
+
+=== Serialization Performance ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+toJSON (1000x)                33.12          0.0331         30,192
+fromJSON (100x)               7.98           0.0798         12,533
+
+=== Memory Usage ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+Insert 1000 words             1.39           1.3869         721
+Memory per word (bytes)       10.69          10.6880        94
+Search 1000 words             0.98           0.9835         1,017
+Prefix operations             0.20           0.2024         4,940
+Delete 500 words              0.36           0.3552         2,815
+Memory after cleanup (MB)     0.04           0.0392         25,525
+
+Batch Insert Improvement: -47.6% faster
+
+=== Batch Operations Performance ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+Individual Insert (1000 words)1.03           0.0010         966,642
+Batch Insert (1000 words)     1.53           0.0015         654,755
+Individual Search (500 words) 0.41           0.0008         1,220,712
+Batch Search (500 words)      0.51           0.0010         981,622
+Individual Remove (200 words) 0.13           0.0007         1,489,935
+Batch Remove (200 words)      0.21           0.0011         934,999
+  Speedup: 0.48x
+  Speedup: 0.61x
+  Speedup: 1.59x
+  Speedup: 1.18x
+  Speedup: 1.49x
+
+=== Batch vs Individual Comparison ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+Individual Insert (10 words)  0.06           0.0056         177,749
+Batch Insert (10 words)       0.12           0.0117         85,189
+Individual Insert (50 words)  0.05           0.0011         919,439
+Batch Insert (50 words)       0.09           0.0018         557,619
+Individual Insert (100 words) 0.11           0.0011         903,416
+Batch Insert (100 words)      0.07           0.0007         1,440,175
+Individual Insert (500 words) 0.61           0.0012         826,033
+Batch Insert (500 words)      0.51           0.0010         975,859
+Individual Insert (1000 words)1.13           0.0011         887,619
+Batch Insert (1000 words)     0.76           0.0008         1,322,151
+
+Benchmark completed!
+
+
+> seadix@1.0.0 benchmark:full
+> ts-node benchmark/benchmark.ts
+
+SeaDix Performance Benchmarks
+=============================
+
+=== Insertion Performance ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+Short words (2 chars)         4.66           0.0047         214,539
+Medium words (5 chars)        2.75           0.0027         363,749
+Long words (34 chars)         2.39           0.0024         418,193
+Prefix words (11 chars)       2.00           0.0020         500,180
+Random words (10 chars)       2.85           0.0029         350,362
+
+=== Dataset Traversal Performance ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+No common prefixes (5 words)  0.55           0.0011         911,697
+Common prefixes (5 words)     0.63           0.0013         795,020
+Mixed prefixes (6 words)      0.70           0.0012         856,949
+Deep prefix sharing (6 words) 0.82           0.0014         732,643
+
+=== Search Performance - Small Dataset ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+Search Existing (10x)         0.20           0.0203         49,382
+Search Non-existing (10x)     0.13           0.0125         79,778
+Single Search (1000x)         0.86           0.0009         1,157,626
+
+=== Search Performance - Medium Dataset ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+Search Existing (10x)         0.46           0.0460         21,755
+Search Non-existing (10x)     0.44           0.0439         22,789
+Single Search (1000x)         0.60           0.0006         1,653,354
+
+=== Search Performance - Large Dataset ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+Search Existing (10x)         5.92           0.5917         1,690
+Search Non-existing (10x)     5.87           0.5874         1,703
+Single Search (1000x)         0.37           0.0004         2,722,422
+
+=== Delete Performance - Small Dataset ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+Delete Existing               0.11           0.0115         87,273
+Delete Non-existing           0.05           0.0055         182,635
+Single Delete (1000x)         0.82           0.0008         1,218,448
+
+=== Delete Performance - Medium Dataset ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+Delete Existing               0.03           0.0005         1,893,198
+Delete Non-existing           0.03           0.0006         1,812,273
+Single Delete (1000x)         0.57           0.0006         1,757,401
+
+=== Delete Performance - Large Dataset ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+Delete Existing               0.86           0.0009         1,166,935
+Delete Non-existing           1.67           0.0017         600,080
+Single Delete (1000x)         0.57           0.0006         1,766,856
+
+=== Loop Performance - Medium Dataset ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+forEach loop (10x)            0.68           0.0012         855,469
+for...of loop (10x)           0.79           0.0014         738,347
+for loop (10x)                0.68           0.0012         853,805
+
+=== Utility Operations - Medium Dataset ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+size() (10000x)               3.25           0.0003         3,074,648
+isEmpty() (10000x)            2.56           0.0003         3,912,287
+getWordsWithPrefix('') (100x) 2.97           0.0297         33,716
+getStats() (1000x)            35.15          0.0352         28,446
+
+=== Prefix Performance - Small Dataset ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+startsWith (100x)             1.63           0.0018         552,942
+getWordsWithPrefix (10x)      0.63           0.0070         143,191
+
+=== Prefix Performance - Medium Dataset ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+startsWith (100x)             0.65           0.0007         1,393,417
+getWordsWithPrefix (10x)      0.65           0.0072         138,007
+
+=== Prefix Performance - Large Dataset ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+startsWith (100x)             0.56           0.0006         1,602,904
+getWordsWithPrefix (10x)      5.32           0.0591         16,910
+
+=== Case Sensitivity Performance ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+Case Sensitive Insert         0.11           0.0019         535,036
+Case Insensitive Insert       0.14           0.0023         427,149
+Case Sensitive Search (10x)   0.45           0.0008         1,301,663
+Case Insensitive Search (10x) 0.57           0.0010         1,020,509
+
+=== Serialization Performance ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+toJSON (1000x)                33.12          0.0331         30,192
+fromJSON (100x)               7.98           0.0798         12,533
+
+=== Memory Usage ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+Insert 1000 words             1.39           1.3869         721
+Memory per word (bytes)       10.69          10.6880        94
+Search 1000 words             0.98           0.9835         1,017
+Prefix operations             0.20           0.2024         4,940
+Delete 500 words              0.36           0.3552         2,815
+Memory after cleanup (MB)     0.04           0.0392         25,525
+
+Batch Insert Improvement: -47.6% faster
+
+=== Batch Operations Performance ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+Individual Insert (1000 words)1.03           0.0010         966,642
+Batch Insert (1000 words)     1.53           0.0015         654,755
+Individual Search (500 words) 0.41           0.0008         1,220,712
+Batch Search (500 words)      0.51           0.0010         981,622
+Individual Remove (200 words) 0.13           0.0007         1,489,935
+Batch Remove (200 words)      0.21           0.0011         934,999
+  Speedup: 0.48x
+  Speedup: 0.61x
+  Speedup: 1.59x
+  Speedup: 1.18x
+  Speedup: 1.49x
+
+=== Batch vs Individual Comparison ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+Individual Insert (10 words)  0.06           0.0056         177,749
+Batch Insert (10 words)       0.12           0.0117         85,189
+Individual Insert (50 words)  0.05           0.0011         919,439
+Batch Insert (50 words)       0.09           0.0018         557,619
+Individual Insert (100 words) 0.11           0.0011         903,416
+Batch Insert (100 words)      0.07           0.0007         1,440,175
+Individual Insert (500 words) 0.61           0.0012         826,033
+Batch Insert (500 words)      0.51           0.0010         975,859
+Individual Insert (1000 words)1.13           0.0011         887,619
+Batch Insert (1000 words)     0.76           0.0008         1,322,151
+
+Benchmark completed!

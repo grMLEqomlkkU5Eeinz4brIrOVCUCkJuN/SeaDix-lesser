@@ -1,0 +1,751 @@
+import { SeaDix } from "../lib/index";
+
+describe("SeaDix", () => {
+	let trie: SeaDix;
+
+	beforeEach(() => {
+		trie = new SeaDix();
+	});
+
+	describe("Constructor and Basic Setup", () => {
+		test("should create an empty trie by default", () => {
+			expect(trie.isEmpty()).toBe(true);
+			expect(trie.size()).toBe(0);
+		});
+
+		test("should create trie with initial words", () => {
+			const words = ["hello", "world", "test"];
+			const trieWithWords = new SeaDix({ words });
+      
+			expect(trieWithWords.size()).toBe(3);
+			expect(trieWithWords.search("hello")).toBe(true);
+			expect(trieWithWords.search("world")).toBe(true);
+			expect(trieWithWords.search("test")).toBe(true);
+		});
+
+		test("should create trie with case insensitive option", () => {
+			const trieCaseInsensitive = new SeaDix({ ignoreCase: true });
+			trieCaseInsensitive.insert("Hello");
+      
+			expect(trieCaseInsensitive.search("hello")).toBe(true);
+			expect(trieCaseInsensitive.search("HELLO")).toBe(true);
+			expect(trieCaseInsensitive.search("HeLLo")).toBe(true);
+		});
+	});
+
+	describe("Insert Operations", () => {
+		test("should insert a single word", () => {
+			trie.insert("hello");
+      
+			expect(trie.search("hello")).toBe(true);
+			expect(trie.size()).toBe(1);
+			expect(trie.isEmpty()).toBe(false);
+		});
+
+		test("should insert multiple words", () => {
+			["hello", "world", "test"].forEach(word => trie.insert(word));
+      
+			expect(trie.size()).toBe(3);
+			expect(trie.search("hello")).toBe(true);
+			expect(trie.search("world")).toBe(true);
+			expect(trie.search("test")).toBe(true);
+		});
+
+		test("should not insert duplicate words", () => {
+			trie.insert("hello");
+			trie.insert("hello");
+      
+			expect(trie.size()).toBe(1);
+			expect(trie.search("hello")).toBe(true);
+		});
+
+		test("should throw error for empty word", () => {
+			expect(() => trie.insert("")).toThrow("Word cannot be empty or whitespace only");
+			expect(() => trie.insert("   ")).toThrow("Word cannot be empty or whitespace only");
+		});
+
+		test("should throw error for non-string input", () => {
+			expect(() => trie.insert(null as any)).toThrow("Word cannot be empty or whitespace only");
+			expect(() => trie.insert(123 as any)).toThrow("word.trim is not a function");
+		});
+
+		test("should handle bulk insertions", () => {
+			// Test that individual inserts work
+			const largeWordList = Array.from({ length: 1000 }, (_, i) => `word${i}`);
+      
+			const start = process.hrtime.bigint();
+			largeWordList.forEach(word => trie.insert(word));
+			const end = process.hrtime.bigint();
+			const duration = Number(end - start) / 1000000; // Convert to milliseconds
+      
+			expect(trie.size()).toBe(1000);
+			expect(duration).toBeLessThan(100); // Should complete in less than 100ms
+		});
+
+		test("should handle large bulk insertions", () => {
+			const largeWordList: string[] = [];
+			for (let i = 0; i < 1000; i++) {
+				largeWordList.push(`word${i}`);
+			}
+      
+			const start = process.hrtime.bigint();
+			largeWordList.forEach(word => trie.insert(word));
+			const end = process.hrtime.bigint();
+			const duration = Number(end - start) / 1000000; // Convert to milliseconds
+      
+			expect(trie.size()).toBe(1000);
+			expect(trie.search("word0")).toBe(true);
+			expect(trie.search("word999")).toBe(true);
+			expect(duration).toBeLessThan(100); // Should complete in less than 100ms
+		});
+
+		test("should handle empty array", () => {
+			[].forEach(word => trie.insert(word));
+			expect(trie.size()).toBe(0);
+			expect(trie.isEmpty()).toBe(true);
+		});
+
+		test("should throw error for empty strings", () => {
+			expect(() => trie.insert("")).toThrow("Word cannot be empty or whitespace only");
+			expect(() => trie.insert("   ")).toThrow("Word cannot be empty or whitespace only");
+		});
+	});
+
+	describe("Search Operations", () => {
+		beforeEach(() => {
+			["hello", "world", "help", "test"].forEach(word => trie.insert(word));
+		});
+
+		test("should find existing words", () => {
+			expect(trie.search("hello")).toBe(true);
+			expect(trie.search("world")).toBe(true);
+			expect(trie.search("help")).toBe(true);
+			expect(trie.search("test")).toBe(true);
+		});
+
+		test("should not find non-existing words", () => {
+			expect(trie.search("hell")).toBe(false);
+			expect(trie.search("worlds")).toBe(false);
+			expect(trie.search("testing")).toBe(false);
+		});
+
+		test("should return false for empty string", () => {
+			expect(trie.search("")).toBe(false);
+			expect(trie.search("   ")).toBe(false);
+		});
+
+		test("should throw error for non-string input", () => {
+			expect(() => trie.search(null as any)).toThrow("Word must be a string");
+			expect(() => trie.search(123 as any)).toThrow("Word must be a string");
+		});
+	});
+
+	describe("Prefix Operations", () => {
+		beforeEach(() => {
+			["hello", "help", "world", "test"].forEach(word => trie.insert(word));
+		});
+
+		test("should check if any word starts with prefix", () => {
+			expect(trie.startsWith("he")).toBe(true);
+			expect(trie.startsWith("hel")).toBe(true);
+			expect(trie.startsWith("hello")).toBe(true);
+			expect(trie.startsWith("wor")).toBe(true);
+			expect(trie.startsWith("test")).toBe(true);
+		});
+
+		test("should return false for non-matching prefixes", () => {
+			expect(trie.startsWith("xyz")).toBe(false);
+			expect(trie.startsWith("abc")).toBe(false);
+			expect(trie.startsWith("hellox")).toBe(false);
+		});
+
+		test("should return true for empty prefix when trie has words", () => {
+			expect(trie.startsWith("")).toBe(true);
+		});
+
+		test("should return false for empty prefix when trie is empty", () => {
+			const emptyTrie = new SeaDix();
+			expect(emptyTrie.startsWith("")).toBe(false);
+		});
+
+		test("should throw error for non-string prefix", () => {
+			expect(() => trie.startsWith(null as any)).toThrow("Prefix must be a string");
+			expect(() => trie.startsWith(123 as any)).toThrow("Prefix must be a string");
+		});
+
+		test("should get words with prefix", () => {
+			const wordsWithHe = trie.getWordsWithPrefix("he");
+			expect(wordsWithHe).toContain("hello");
+			expect(wordsWithHe).toContain("help");
+			expect(wordsWithHe).toHaveLength(2);
+		});
+
+		test("should get all words with empty prefix", () => {
+			const allWords = trie.getWordsWithPrefix("");
+			expect(allWords).toHaveLength(4);
+			expect(allWords).toContain("hello");
+			expect(allWords).toContain("help");
+			expect(allWords).toContain("world");
+			expect(allWords).toContain("test");
+		});
+
+		test("should return empty array for non-matching prefix", () => {
+			const words = trie.getWordsWithPrefix("xyz");
+			expect(words).toHaveLength(0);
+		});
+
+		test("should throw error for non-string prefix in getWordsWithPrefix", () => {
+			expect(() => trie.getWordsWithPrefix(null as any)).toThrow("Prefix must be a string");
+			expect(() => trie.getWordsWithPrefix(123 as any)).toThrow("Prefix must be a string");
+		});
+	});
+
+	describe("Remove Operations", () => {
+		beforeEach(() => {
+			["hello", "world", "help", "test"].forEach(word => trie.insert(word));
+		});
+
+		test("should remove existing word", () => {
+			const result = trie.remove("hello");
+      
+			expect(result).toBe(true);
+			expect(trie.search("hello")).toBe(false);
+			expect(trie.size()).toBe(3);
+		});
+
+		test("should return false when removing non-existing word", () => {
+			const result = trie.remove("xyz");
+      
+			expect(result).toBe(false);
+			expect(trie.size()).toBe(4);
+		});
+
+		test("should return false for empty string", () => {
+			const result = trie.remove("");
+			expect(result).toBe(false);
+		});
+
+		test("should throw error for non-string input", () => {
+			expect(() => trie.remove(null as any)).toThrow("Word must be a string");
+			expect(() => trie.remove(123 as any)).toThrow("Word must be a string");
+		});
+
+		test("should remove multiple words", () => {
+			const results = trie.removeMany(["hello", "xyz", "world"]);
+      
+			expect(results).toEqual([true, false, true]);
+			expect(trie.size()).toBe(2);
+			expect(trie.search("hello")).toBe(false);
+			expect(trie.search("world")).toBe(false);
+			expect(trie.search("help")).toBe(true);
+			expect(trie.search("test")).toBe(true);
+		});
+
+		test("should throw error for non-array in removeMany", () => {
+			expect(() => trie.removeMany(null as any)).toThrow("Words must be an array");
+			expect(() => trie.removeMany("not-array" as any)).toThrow("Words must be an array");
+		});
+	});
+
+	describe("Utility Methods", () => {
+		beforeEach(() => {
+			["hello", "world", "test"].forEach(word => trie.insert(word));
+		});
+
+		test("should check if trie is empty", () => {
+			expect(trie.isEmpty()).toBe(false);
+      
+			trie.clear();
+			expect(trie.isEmpty()).toBe(true);
+		});
+
+		test("should get all words", () => {
+			const allWords = trie.getWordsWithPrefix("");
+			expect(allWords).toHaveLength(3);
+			expect(allWords).toContain("hello");
+			expect(allWords).toContain("world");
+			expect(allWords).toContain("test");
+		});
+
+		test("should get size", () => {
+			expect(trie.size()).toBe(3);
+      
+			trie.insert("new");
+			expect(trie.size()).toBe(4);
+      
+			trie.remove("hello");
+			expect(trie.size()).toBe(3);
+		});
+
+		test("should clear all words", () => {
+			trie.clear();
+      
+			expect(trie.isEmpty()).toBe(true);
+			expect(trie.size()).toBe(0);
+			expect(trie.getWordsWithPrefix("")).toHaveLength(0);
+		});
+
+		test("should get statistics", () => {
+			const stats = trie.getStats();
+      
+			expect(stats.wordCount).toBe(3);
+			expect(stats.isEmpty).toBe(false);
+			expect(stats.allWords).toHaveLength(3);
+			expect(stats.allWords).toContain("hello");
+			expect(stats.allWords).toContain("world");
+			expect(stats.allWords).toContain("test");
+		});
+	});
+
+	describe("Static Methods", () => {
+		test("should create trie from words", () => {
+			const words = ["hello", "world", "test"];
+			const trieFromWords = SeaDix.fromWords(words);
+      
+			expect(trieFromWords.size()).toBe(3);
+			expect(trieFromWords.search("hello")).toBe(true);
+			expect(trieFromWords.search("world")).toBe(true);
+			expect(trieFromWords.search("test")).toBe(true);
+		});
+
+		test("should create trie from words with options", () => {
+			const words = ["Hello", "World"];
+			const trieFromWords = SeaDix.fromWords(words, { ignoreCase: true });
+      
+			expect(trieFromWords.search("hello")).toBe(true);
+			expect(trieFromWords.search("WORLD")).toBe(true);
+		});
+
+		test("should convert to JSON", () => {
+			["hello", "world"].forEach(word => trie.insert(word));
+			const json = trie.toJSON();
+      
+			expect(json.words).toContain("hello");
+			expect(json.words).toContain("world");
+			expect(json.options.ignoreCase).toBe(false);
+		});
+
+		test("should create from JSON", () => {
+			const originalTrie = new SeaDix({ words: ["hello", "world"], ignoreCase: true });
+			const json = originalTrie.toJSON();
+			const newTrie = SeaDix.fromJSON(json);
+      
+			expect(newTrie.size()).toBe(2);
+			expect(newTrie.search("hello")).toBe(true);
+			expect(newTrie.search("world")).toBe(true);
+			expect(newTrie.search("HELLO")).toBe(true); // Case insensitive
+		});
+	});
+
+	describe("Case Sensitivity", () => {
+		test("should be case sensitive by default", () => {
+			trie.insert("Hello");
+      
+			expect(trie.search("Hello")).toBe(true);
+			expect(trie.search("hello")).toBe(false);
+			expect(trie.search("HELLO")).toBe(false);
+		});
+
+		test("should be case insensitive when option is set", () => {
+			const caseInsensitiveTrie = new SeaDix({ ignoreCase: true });
+			caseInsensitiveTrie.insert("Hello");
+      
+			expect(caseInsensitiveTrie.search("Hello")).toBe(true);
+			expect(caseInsensitiveTrie.search("hello")).toBe(true);
+			expect(caseInsensitiveTrie.search("HELLO")).toBe(true);
+			expect(caseInsensitiveTrie.search("HeLLo")).toBe(true);
+		});
+
+		test("should handle case insensitive prefix search", () => {
+			const caseInsensitiveTrie = new SeaDix({ ignoreCase: true });
+			["Hello", "Help", "World"].forEach(word => caseInsensitiveTrie.insert(word));
+      
+			expect(caseInsensitiveTrie.startsWith("he")).toBe(true);
+			expect(caseInsensitiveTrie.startsWith("HE")).toBe(true);
+      
+			const words = caseInsensitiveTrie.getWordsWithPrefix("he");
+			expect(words).toHaveLength(2);
+		});
+	});
+
+	describe("Edge Cases", () => {
+		test("should handle single character words", () => {
+			trie.insert("a");
+			trie.insert("b");
+      
+			expect(trie.search("a")).toBe(true);
+			expect(trie.search("b")).toBe(true);
+			expect(trie.size()).toBe(2);
+		});
+
+		test("should handle very long words", () => {
+			const longWord = "a".repeat(1000);
+			trie.insert(longWord);
+      
+			expect(trie.search(longWord)).toBe(true);
+			expect(trie.size()).toBe(1);
+		});
+
+		test("should handle special characters", () => {
+			["hello-world", "test@example.com", "user123"].forEach(word => trie.insert(word));
+      
+			expect(trie.search("hello-world")).toBe(true);
+			expect(trie.search("test@example.com")).toBe(true);
+			expect(trie.search("user123")).toBe(true);
+		});
+
+		test("should handle unicode characters", () => {
+			["café", "naïve", "résumé"].forEach(word => trie.insert(word));
+      
+			expect(trie.search("café")).toBe(true);
+			expect(trie.search("naïve")).toBe(true);
+			expect(trie.search("résumé")).toBe(true);
+		});
+	});
+
+	describe("Bulk Insertion Tests", () => {
+		test("should handle words with no common prefix", () => {
+			// Test the specific case that was causing overwriting issues
+			const trie = new SeaDix();
+			["cat", "dog", "bird", "fish"].forEach(word => trie.insert(word));
+			
+			expect(trie.size()).toBe(4);
+			expect(trie.search("cat")).toBe(true);
+			expect(trie.search("dog")).toBe(true);
+			expect(trie.search("bird")).toBe(true);
+			expect(trie.search("fish")).toBe(true);
+			
+			// Verify all words are accessible
+			const allWords = trie.getWordsWithPrefix("").sort();
+			expect(allWords).toEqual(["bird", "cat", "dog", "fish"]);
+		});
+
+		test("should handle mixed common prefixes and unique words", () => {
+			const trie = new SeaDix();
+			["car", "card", "care", "cat", "dog", "door"].forEach(word => trie.insert(word));
+			
+			expect(trie.size()).toBe(6);
+			
+			// Test common prefix "car"
+			expect(trie.getWordsWithPrefix("car")).toEqual(expect.arrayContaining(["car", "card", "care"]));
+			
+			// Test unique words
+			expect(trie.search("cat")).toBe(true);
+			expect(trie.search("dog")).toBe(true);
+			expect(trie.search("door")).toBe(true);
+			
+			// Verify all words are present
+			const allWords = trie.getWordsWithPrefix("").sort();
+			expect(allWords).toEqual(expect.arrayContaining(["car", "card", "care", "cat", "dog", "door"]));
+			expect(allWords).toHaveLength(6);
+		});
+
+		test("should handle complex prefix scenarios", () => {
+			const trie = new SeaDix();
+			["a", "aa", "aaa", "aaaa", "aaaaa", "b", "bb", "bbb"].forEach(word => trie.insert(word));
+			
+			expect(trie.size()).toBe(8);
+			
+			// Test various prefix lengths
+			expect(trie.getWordsWithPrefix("a")).toEqual(expect.arrayContaining(["a", "aa", "aaa", "aaaa", "aaaaa"]));
+			expect(trie.getWordsWithPrefix("aa")).toEqual(expect.arrayContaining(["aa", "aaa", "aaaa", "aaaaa"]));
+			expect(trie.getWordsWithPrefix("aaa")).toEqual(expect.arrayContaining(["aaa", "aaaa", "aaaaa"]));
+			expect(trie.getWordsWithPrefix("b")).toEqual(expect.arrayContaining(["b", "bb", "bbb"]));
+			
+			// Verify all words are present
+			const allWords = trie.getWordsWithPrefix("").sort();
+			expect(allWords).toEqual(["a", "aa", "aaa", "aaaa", "aaaaa", "b", "bb", "bbb"]);
+		});
+
+		test("should handle large dataset with mixed patterns", () => {
+			const words: string[] = [];
+			
+			// Add words with common prefixes
+			for (let i = 0; i < 100; i++) {
+				words.push(`prefix${i.toString().padStart(3, "0")}`);
+			}
+			
+			// Add unique words
+			for (let i = 0; i < 50; i++) {
+				words.push(`unique${i.toString().padStart(3, "0")}`);
+			}
+			// Add words with no common prefix
+			words.push("a", "b", "c", "d", "e");
+			
+			const trie = new SeaDix();
+			words.forEach(word => trie.insert(word));
+			expect(trie.size()).toBe(155);
+			
+			// Test prefix search
+			const prefixWords = trie.getWordsWithPrefix("prefix");
+			expect(prefixWords).toHaveLength(100);
+			
+			const uniqueWords = trie.getWordsWithPrefix("unique");
+			expect(uniqueWords).toHaveLength(50);
+			
+			// Test individual unique words
+			expect(trie.search("a")).toBe(true);
+			expect(trie.search("b")).toBe(true);
+			expect(trie.search("c")).toBe(true);
+			expect(trie.search("d")).toBe(true);
+			expect(trie.search("e")).toBe(true);
+		});
+	});
+
+	describe("Orphaned Node Cleanup Tests", () => {
+		test("should clean up orphaned nodes after removal", () => {
+			const trie = new SeaDix();
+			
+			// Insert words that will create a specific tree structure
+			["hello", "help", "world"].forEach(word => trie.insert(word));
+			expect(trie.size()).toBe(3);
+			
+			// Remove "hello" - this should clean up orphaned nodes
+			const removed = trie.remove("hello");
+			expect(removed).toBe(true);
+			expect(trie.size()).toBe(2);
+			
+			// Verify "help" and "world" are still accessible
+			expect(trie.search("help")).toBe(true);
+			expect(trie.search("world")).toBe(true);
+			expect(trie.search("hello")).toBe(false);
+			
+			// Verify prefix search still works
+			expect(trie.getWordsWithPrefix("he")).toEqual(["help"]);
+			expect(trie.getWordsWithPrefix("wo")).toEqual(["world"]);
+		});
+
+		test("should clean up orphaned nodes in complex tree structure", () => {
+			const trie = new SeaDix();
+			
+			// Create a more complex tree structure
+			["car", "card", "care", "careful", "cat", "dog"].forEach(word => trie.insert(word));
+			expect(trie.size()).toBe(6);
+			
+			// Remove "care" - should clean up orphaned nodes
+			const removed = trie.remove("care");
+			expect(removed).toBe(true);
+			expect(trie.size()).toBe(5);
+			
+			// Verify remaining words are still accessible
+			expect(trie.search("car")).toBe(true);
+			expect(trie.search("card")).toBe(true);
+			expect(trie.search("careful")).toBe(true);
+			expect(trie.search("cat")).toBe(true);
+			expect(trie.search("dog")).toBe(true);
+			expect(trie.search("care")).toBe(false);
+			
+			// Verify prefix searches still work
+			expect(trie.getWordsWithPrefix("car")).toEqual(expect.arrayContaining(["car", "card", "careful"]));
+			expect(trie.getWordsWithPrefix("ca")).toEqual(expect.arrayContaining(["car", "card", "careful", "cat"]));
+		});
+
+		test("should handle cleanup when removing leaf nodes", () => {
+			const trie = new SeaDix();
+			
+			// Insert words that create a specific tree structure
+			["a", "aa", "aaa", "aaaa"].forEach(word => trie.insert(word));
+			expect(trie.size()).toBe(4);
+			
+			// Remove the longest word first
+			const removed = trie.remove("aaaa");
+			expect(removed).toBe(true);
+			expect(trie.size()).toBe(3);
+			
+			// Verify remaining words are still accessible
+			expect(trie.search("a")).toBe(true);
+			expect(trie.search("aa")).toBe(true);
+			expect(trie.search("aaa")).toBe(true);
+			expect(trie.search("aaaa")).toBe(false);
+			
+			// Remove more words
+			trie.remove("aaa");
+			expect(trie.size()).toBe(2);
+			
+			trie.remove("aa");
+			expect(trie.size()).toBe(1);
+			
+			// Only "a" should remain
+			expect(trie.search("a")).toBe(true);
+			expect(trie.getWordsWithPrefix("")).toEqual(["a"]);
+		});
+
+		test("should not clean up nodes that are still needed", () => {
+			const trie = new SeaDix();
+			
+			// Insert words that share common prefixes
+			["hello", "help", "world"].forEach(word => trie.insert(word));
+			expect(trie.size()).toBe(3);
+			
+			// Remove "hello" but "help" should still use the "he" prefix
+			const removed = trie.remove("hello");
+			expect(removed).toBe(true);
+			expect(trie.size()).toBe(2);
+			
+			// Verify "help" is still accessible and prefix search works
+			expect(trie.search("help")).toBe(true);
+			expect(trie.getWordsWithPrefix("he")).toEqual(["help"]);
+			
+			// Verify the tree structure is still correct
+			expect(trie.getWordsWithPrefix("").sort()).toEqual(["help", "world"]);
+		});
+
+		test("should handle cleanup with multiple removals", () => {
+			const trie = new SeaDix();
+			
+			// Insert a larger set of words
+			["a", "aa", "aaa", "aaaa", "b", "bb", "bbb", "c", "cc", "ccc"].forEach(word => trie.insert(word));
+			expect(trie.size()).toBe(10);
+			
+			// Remove words in a specific order to test cleanup
+			trie.remove("aaaa");
+			expect(trie.size()).toBe(9);
+			expect(trie.search("aaa")).toBe(true); // Should still exist
+			
+			trie.remove("aaa");
+			expect(trie.size()).toBe(8);
+			expect(trie.search("aa")).toBe(true); // Should still exist
+			
+			trie.remove("aa");
+			expect(trie.size()).toBe(7);
+			expect(trie.search("a")).toBe(true); // Should still exist
+			
+			// Remove all "a" words
+			trie.remove("a");
+			expect(trie.size()).toBe(6);
+			
+			// Verify remaining words
+			const remainingWords = trie.getWordsWithPrefix("").sort();
+			expect(remainingWords).toEqual(["b", "bb", "bbb", "c", "cc", "ccc"]);
+			
+			// Verify prefix searches still work
+			expect(trie.getWordsWithPrefix("b")).toEqual(["b", "bb", "bbb"]);
+			expect(trie.getWordsWithPrefix("c")).toEqual(["c", "cc", "ccc"]);
+		});
+	});
+
+	describe("Batch Operations", () => {
+		describe("insertBatch", () => {
+			test("should insert multiple words in batch", () => {
+				const words = ["hello", "world", "test", "batch"];
+				const count = trie.insertBatch(words);
+				
+				expect(count).toBe(4);
+				expect(trie.size()).toBe(4);
+				expect(trie.search("hello")).toBe(true);
+				expect(trie.search("world")).toBe(true);
+				expect(trie.search("test")).toBe(true);
+				expect(trie.search("batch")).toBe(true);
+			});
+
+			test("should handle empty array", () => {
+				const count = trie.insertBatch([]);
+				expect(count).toBe(0);
+				expect(trie.size()).toBe(0);
+			});
+
+			test("should filter out invalid words", () => {
+				const words = ["hello", "", "world", null, "test", undefined];
+				const count = trie.insertBatch(words as any);
+				
+				expect(count).toBe(3);
+				expect(trie.size()).toBe(3);
+				expect(trie.search("hello")).toBe(true);
+				expect(trie.search("world")).toBe(true);
+				expect(trie.search("test")).toBe(true);
+			});
+
+			test("should throw error for non-array input", () => {
+				expect(() => trie.insertBatch("not an array" as any)).toThrow("Words must be an array");
+			});
+		});
+
+		describe("searchBatch", () => {
+			beforeEach(() => {
+				trie.insertBatch(["hello", "world", "test"]);
+			});
+
+			test("should search multiple words in batch", () => {
+				const words = ["hello", "world", "missing", "test"];
+				const results = trie.searchBatch(words);
+				
+				expect(results).toEqual([true, true, false, true]);
+			});
+
+			test("should handle empty array", () => {
+				const results = trie.searchBatch([]);
+				expect(results).toEqual([]);
+			});
+
+			test("should handle mixed valid/invalid words", () => {
+				const words = ["hello", "", "world", null, "missing"];
+				const results = trie.searchBatch(words as any);
+				
+				expect(results).toEqual([true, false, true, false, false]);
+			});
+
+			test("should throw error for non-array input", () => {
+				expect(() => trie.searchBatch("not an array" as any)).toThrow("Words must be an array");
+			});
+		});
+
+		describe("removeBatch", () => {
+			beforeEach(() => {
+				trie.insertBatch(["hello", "world", "test", "batch"]);
+			});
+
+			test("should remove multiple words in batch", () => {
+				const words = ["hello", "world", "missing", "test"];
+				const results = trie.removeBatch(words);
+				
+				expect(results).toEqual([true, true, false, true]);
+				expect(trie.size()).toBe(1);
+				expect(trie.search("batch")).toBe(true);
+			});
+
+			test("should handle empty array", () => {
+				const results = trie.removeBatch([]);
+				expect(results).toEqual([]);
+				expect(trie.size()).toBe(4);
+			});
+
+			test("should handle mixed valid/invalid words", () => {
+				const words = ["hello", "", "world", null, "missing"];
+				const results = trie.removeBatch(words as any);
+				
+				expect(results).toEqual([true, false, true, false, false]);
+				expect(trie.size()).toBe(2);
+			});
+
+			test("should throw error for non-array input", () => {
+				expect(() => trie.removeBatch("not an array" as any)).toThrow("Words must be an array");
+			});
+		});
+
+		describe("Batch Performance", () => {
+			test("batch operations should be faster than individual operations", () => {
+				const words = Array.from({ length: 100 }, (_, i) => `word${i}`);
+				
+				// Individual operations
+				const trie1 = new SeaDix();
+				const start1 = process.hrtime.bigint();
+				for (const word of words) {
+					trie1.insert(word);
+				}
+				const end1 = process.hrtime.bigint();
+				const individualTime = Number(end1 - start1);
+				
+				// Batch operations
+				const trie2 = new SeaDix();
+				const start2 = process.hrtime.bigint();
+				trie2.insertBatch(words);
+				const end2 = process.hrtime.bigint();
+				const batchTime = Number(end2 - start2);
+				
+				// Batch should be faster (or at least not much slower)
+				expect(batchTime).toBeLessThanOrEqual(individualTime * 1.5); // Allow some variance
+				expect(trie1.size()).toBe(trie2.size());
+			});
+		});
+	});
+});

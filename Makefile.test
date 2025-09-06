@@ -1,0 +1,50 @@
+# Makefile for C++ performance test
+CXX = clang++
+CXXFLAGS = -std=c++17 -O3 -Wall -Wextra -I.
+TARGET = test_performance
+SOURCES = test_performance.cpp src/RadixTrie.cc
+
+# Default target
+all: $(TARGET)
+
+# Build the test executable
+$(TARGET): $(SOURCES)
+	$(CXX) $(CXXFLAGS) -o $(TARGET) $(SOURCES)
+
+# Run the performance test
+run: $(TARGET)
+	./$(TARGET)
+
+# Clean up
+clean:
+	rm -f $(TARGET)
+
+# Debug build
+debug: CXXFLAGS += -g -DDEBUG
+debug: $(TARGET)
+
+# Release build
+release: CXXFLAGS += -DNDEBUG
+release: $(TARGET)
+
+# O2 optimization build
+o2: CXXFLAGS = -std=c++17 -O2 -Wall -Wextra -I.
+o2: $(TARGET)
+
+# O0 (no optimization) build
+o0: CXXFLAGS = -std=c++17 -O0 -Wall -Wextra -I.
+o0: $(TARGET)
+
+# Help
+help:
+	@echo "Available targets:"
+	@echo "  all      - Build the test executable (default)"
+	@echo "  run      - Build and run the performance test"
+	@echo "  clean    - Remove the test executable"
+	@echo "  debug    - Build with debug symbols"
+	@echo "  release  - Build with release optimizations"
+	@echo "  o2       - Build with O2 optimization"
+	@echo "  o0       - Build with no optimization"
+	@echo "  help     - Show this help message"
+
+.PHONY: all run clean debug release o2 o0 help
