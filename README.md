@@ -163,7 +163,7 @@ This project is primarily about understanding the performance characteristics of
 ### The N-API Boundary Problem
 
 Every call from JavaScript to C++ has significant overhead:
-- **Pure C++**: 1.46M insertions/sec, 17.9M searches/sec
+- **Pure C++**: 2.7M insertions/sec,  4.01606e+07 searches/sec
 - **Node.js (N-API)**: 208K insertions/sec, 625K searches/sec
 - **Overhead**: 7x slower for insertions, 29x slower for searches
 
