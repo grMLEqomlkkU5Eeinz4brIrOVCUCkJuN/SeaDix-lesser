@@ -19,6 +19,7 @@
     "test:watch": "jest --watch",
     "benchmark": "ts-node benchmark/simple-benchmark.ts",
     "benchmark:full": "ts-node benchmark/benchmark.ts",
+    "benchmark:stable": "ts-node benchmark/stable-benchmarks.ts",
     "format:cc": "find . -name \"*.cc\" -exec clang-format -i {} \\;",
     "format:all": "find . \\( -name \"*.cc\" -o -name \"*.cpp\" -o -name \"*.h\" \\) -exec clang-format -i {} \\;",
     "format": "find . \\( -name \"*.cc\" -o -name \"*.cpp\" -o -name \"*.h\" \\) -exec clang-format -i {} \\;",
