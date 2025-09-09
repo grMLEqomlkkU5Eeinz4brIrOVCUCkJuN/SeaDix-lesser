@@ -9,22 +9,23 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '22.x'
         cache: 'npm'
         registry-url: 'https://registry.npmjs.org'
-        
+
     - name: Install dependencies
       run: npm ci
-      
+
     - name: Run tests
       run: |
         npm run build
         npm test
+        npm run benchmark:stable
