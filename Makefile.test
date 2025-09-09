@@ -1,7 +1,7 @@
 # Makefile for C++ performance test
 CXX = clang++
 CXXFLAGS = -std=c++17 -O3 -Wall -Wextra -I.
-TARGET = test_performance.exe
+TARGET = test_performance
 SOURCES = test_performance.cpp src/RadixTrie.cc
 
 # Default target

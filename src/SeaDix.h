@@ -2,9 +2,6 @@
 
 #include "RadixTrie.h"
 #include <napi.h>
-#include <vector>
-#include <string>
-#include <string_view>
 
 class SeaDix : public Napi::ObjectWrap<SeaDix> {
   public:
@@ -15,8 +12,6 @@ class SeaDix : public Napi::ObjectWrap<SeaDix> {
   private:
 	static Napi::FunctionReference constructor;
 	RadixTrie trie_;
-	
-	// No caching overhead - direct operations only
 
 	// Methods exposed to JavaScript
 	Napi::Value Insert(const Napi::CallbackInfo &info);
@@ -30,7 +25,4 @@ class SeaDix : public Napi::ObjectWrap<SeaDix> {
 	Napi::Value Empty(const Napi::CallbackInfo &info);
 	Napi::Value Size(const Napi::CallbackInfo &info);
 	Napi::Value Clear(const Napi::CallbackInfo &info);
-	
-	// Utility methods
-	std::vector<std::string> extract_string_array(const Napi::Array& array);
 };
