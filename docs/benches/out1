@@ -1,0 +1,45 @@
+RadixTrie C++ Performance Test
+==============================
+
+=== Insertion Performance Test ===
+Small dataset (10 words): 1.1 μs per word
+Operations per second: 909091
+Medium dataset (58 words): 1.08621 μs per word
+Operations per second: 920635
+Large dataset (1000 words): 0.814 μs per word
+Operations per second: 1.2285e+06
+
+=== Prefix Sharing Performance Test ===
+No common prefixes (5 words): 0.4 μs per word
+Common prefixes (5 words): 0.8 μs per word
+Deep prefix sharing (6 words): 0.333333 μs per word
+
+=== Search Performance Test ===
+Small dataset (10 words): 0.0356 μs per search
+Searches per second: 2.80899e+07
+Medium dataset (58 words): 0.0650517 μs per search
+Searches per second: 1.53724e+07
+Large dataset (1000 words): 0.107816 μs per search
+Searches per second: 9.27506e+06
+
+=== Bulk Insertion Performance Test ===
+Small dataset (10 words): 0.4 μs per word
+Operations per second: 2.5e+06
+Trie size: 10
+
+Medium dataset (58 words): 0.568966 μs per word
+Operations per second: 1.75758e+06
+Trie size: 58
+
+Large dataset (1000 words): 0.286 μs per word
+Operations per second: 3.4965e+06
+Trie size: 1000
+
+=== Memory Usage Test ===
+Inserted 1000 words in 240 μs
+Average per word: 0.24 μs
+Trie size: 1000
+Performed 100000 searches in 10836 μs
+Average per search: 0.10836 μs
+
+Performance test completed!
