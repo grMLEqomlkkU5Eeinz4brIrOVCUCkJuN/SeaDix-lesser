@@ -51,7 +51,7 @@ Napi::Value SeaDix::Insert(const Napi::CallbackInfo &info) {
 	return env.Undefined();
 }
 
-// Search method - uses string_view to avoid copies
+// Fast Search method - direct operation, no overhead
 Napi::Value SeaDix::Search(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
 
@@ -61,7 +61,7 @@ Napi::Value SeaDix::Search(const Napi::CallbackInfo &info) {
 		return env.Undefined();
 	}
 
-	// Use string_view to avoid unnecessary string copy
+	// Direct search - fastest path
 	std::string word = info[0].As<Napi::String>().Utf8Value();
 	std::string_view word_view(word);
 	bool found = trie_.search(word_view);
@@ -155,7 +155,7 @@ Napi::Value SeaDix::Clear(const Napi::CallbackInfo &info) {
 	return env.Undefined();
 }
 
-// Batch Insert method - reduces N-API overhead
+// Fast Batch Insert method - simple and direct
 Napi::Value SeaDix::InsertBatch(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
 
@@ -165,25 +165,25 @@ Napi::Value SeaDix::InsertBatch(const Napi::CallbackInfo &info) {
 		return env.Undefined();
 	}
 
-	Napi::Array words = info[0].As<Napi::Array>();
+	Napi::Array js_words = info[0].As<Napi::Array>();
+	
+	// Extract all strings in one pass to minimize N-API calls
+	std::vector<std::string> words = extract_string_array(js_words);
 	uint32_t count = 0;
 
-	// Process all words in a single C++ call
-	for (uint32_t i = 0; i < words.Length(); ++i) {
-		if (words.Get(i).IsString()) {
-			std::string word = words.Get(i).As<Napi::String>().Utf8Value();
-			if (!word.empty()) {
-				std::string_view word_view(word);
-				trie_.insert(word_view);
-				count++;
-			}
+	// Simple, fast processing - no overhead
+	for (const auto& word : words) {
+		if (!word.empty()) {
+			std::string_view word_view(word);
+			trie_.insert(word_view);
+			count++;
 		}
 	}
 
 	return Napi::Number::New(env, count);
 }
 
-// Batch Search method - returns array of results
+// Fast Batch Search method - direct operations
 Napi::Value SeaDix::SearchBatch(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
 
@@ -193,25 +193,31 @@ Napi::Value SeaDix::SearchBatch(const Napi::CallbackInfo &info) {
 		return env.Undefined();
 	}
 
-	Napi::Array words = info[0].As<Napi::Array>();
-	Napi::Array results = Napi::Array::New(env, words.Length());
+	Napi::Array js_words = info[0].As<Napi::Array>();
+	
+	// Extract all strings in one pass
+	std::vector<std::string> words = extract_string_array(js_words);
+	
+	// Pre-allocate result array
+	Napi::Array results = Napi::Array::New(env, words.size());
 
-	// Process all searches in a single C++ call
-	for (uint32_t i = 0; i < words.Length(); ++i) {
-		if (words.Get(i).IsString()) {
-			std::string word = words.Get(i).As<Napi::String>().Utf8Value();
+	// Direct searches - no caching overhead
+	for (size_t i = 0; i < words.size(); ++i) {
+		const std::string& word = words[i];
+		bool found = false;
+		
+		if (!word.empty()) {
 			std::string_view word_view(word);
-			bool found = trie_.search(word_view);
-			results.Set(i, Napi::Boolean::New(env, found));
-		} else {
-			results.Set(i, Napi::Boolean::New(env, false));
+			found = trie_.search(word_view);
 		}
+		
+		results.Set(static_cast<uint32_t>(i), Napi::Boolean::New(env, found));
 	}
 
 	return results;
 }
 
-// Batch Remove method - returns array of success flags
+// Fast Batch Remove method - direct operations
 Napi::Value SeaDix::RemoveBatch(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
 
@@ -221,22 +227,44 @@ Napi::Value SeaDix::RemoveBatch(const Napi::CallbackInfo &info) {
 		return env.Undefined();
 	}
 
-	Napi::Array words = info[0].As<Napi::Array>();
-	Napi::Array results = Napi::Array::New(env, words.Length());
+	Napi::Array js_words = info[0].As<Napi::Array>();
+	
+	// Extract all strings in one pass
+	std::vector<std::string> words = extract_string_array(js_words);
+	
+	// Pre-allocate result array
+	Napi::Array results = Napi::Array::New(env, words.size());
 
-	// Process all removals in a single C++ call
-	for (uint32_t i = 0; i < words.Length(); ++i) {
-		if (words.Get(i).IsString()) {
-			std::string word = words.Get(i).As<Napi::String>().Utf8Value();
+	// Direct removals - no overhead
+	for (size_t i = 0; i < words.size(); ++i) {
+		const std::string& word = words[i];
+		bool removed = false;
+		if (!word.empty()) {
 			std::string_view word_view(word);
-			bool removed = trie_.remove(word_view);
-			results.Set(i, Napi::Boolean::New(env, removed));
-		} else {
-			results.Set(i, Napi::Boolean::New(env, false));
+			removed = trie_.remove(word_view);
 		}
+		results.Set(static_cast<uint32_t>(i), Napi::Boolean::New(env, removed));
 	}
 
 	return results;
+}
+
+
+// Utility method: Extract string array efficiently
+std::vector<std::string> SeaDix::extract_string_array(const Napi::Array& array) {
+	std::vector<std::string> result;
+	result.reserve(array.Length());
+	
+	for (uint32_t i = 0; i < array.Length(); ++i) {
+		Napi::Value value = array.Get(i);
+		if (value.IsString()) {
+			result.emplace_back(value.As<Napi::String>().Utf8Value());
+		} else {
+			result.emplace_back(); // Empty string for non-string values
+		}
+	}
+	
+	return result;
 }
 
 // Module initialization

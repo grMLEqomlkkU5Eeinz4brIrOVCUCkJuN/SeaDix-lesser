@@ -53,14 +53,21 @@ void RadixTrie::collect_words_from_node(
 	if (!node)
 		return;
 
-	std::string full_word = prefix + node->key;
+	// Use more efficient string concatenation
+	std::string full_word;
+	full_word.reserve(prefix.length() + node->key.length());
+	full_word = prefix;
+	full_word += node->key;
 
 	if (node->is_end) {
 		result.push_back(full_word);
 	}
 
-	for (const auto &[ch, child] : node->children) {
-		collect_words_from_node(child.get(), full_word, result);
+	// Pre-calculate size for better performance
+	if (!node->children.empty()) {
+		for (const auto &[ch, child] : node->children) {
+			collect_words_from_node(child.get(), full_word, result);
+		}
 	}
 }
 
@@ -307,19 +314,23 @@ void RadixTrie::clear() {
 void RadixTrie::split_node(Node *current, char first_char, size_t common_len,
 						   const std::string &child_key,
 						   std::string_view /* remaining */) {
-	// Create intermediate node with common prefix
-	auto intermediate =
-		std::make_unique<Node>(std::string(child_key.data(), common_len));
-
 	// Get the old child before moving it
 	auto old_child = std::move(current->children[first_char]);
+	
+	// Create intermediate node with common prefix (use move semantics)
+	std::string common_prefix(child_key.data(), common_len);
+	auto intermediate = std::make_unique<Node>(std::move(common_prefix), current, first_char);
 
-	// Update child's key to remaining part
-	old_child->key.assign(child_key.data() + common_len,
-						  child_key.length() - common_len);
-
-	// Move the old child under the intermediate node
+	// Update child's key to remaining part using more efficient string operations
+	std::string remaining_key(child_key.data() + common_len, child_key.length() - common_len);
+	old_child->key = std::move(remaining_key);
+	
+	// Update parent pointers for the old child
 	char old_first_char = old_child->key[0];
+	old_child->parent = intermediate.get();
+	old_child->parent_char = old_first_char;
+	
+	// Move the old child under the intermediate node
 	intermediate->children[old_first_char] = std::move(old_child);
 
 	// Replace the old child with the intermediate node
