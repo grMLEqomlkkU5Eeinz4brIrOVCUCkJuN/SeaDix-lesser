@@ -31,7 +31,7 @@
     "cpp:test:o2": "make -f Makefile.test o2",
     "cpp:test:o0": "make -f Makefile.test o0",
     "cpp:test:help": "make -f Makefile.test help",
-	"build-test-bench": "npm run build:all && npm run test && npm run benchmark:full"
+	"build-test-bench": "npm run build:all && npm run test && npm run benchmark:stable"
   },
   "gypfile": true,
   "keywords": [
