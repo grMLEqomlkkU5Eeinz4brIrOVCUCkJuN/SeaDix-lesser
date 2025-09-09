@@ -4,6 +4,10 @@ An experimental Radix Trie implementation for Node.js built with C++. This is a 
 
 You might find a lot of messy code, partly because this is really just for me to learn and also because I tried optimizing some parts and had to revert on numerous occasions.
 
+# NOTICE
+
+If you are conducting benchmarks, you should make use of `stable-benchmarks.ts` this is because I notived a huge amount of variation in runs.
+
 ## What This Is
 
 SeaDix is a prefix tree (trie) data structure implementation that I built to experiment with:
