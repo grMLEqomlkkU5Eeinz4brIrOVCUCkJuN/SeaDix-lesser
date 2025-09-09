@@ -2,6 +2,12 @@
   "name": "seadix",
   "version": "1.0.0",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/",
+    "build/Release/seadix.node",
+    "README.md"
+  ],
   "scripts": {
     "build": "node-gyp rebuild",
     "build:debug": "node-gyp rebuild --debug",
