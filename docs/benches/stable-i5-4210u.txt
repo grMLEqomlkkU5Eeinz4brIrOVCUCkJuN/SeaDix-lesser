@@ -1,0 +1,64 @@
+
+
+> seadix@1.0.0 benchmark:stable
+> ts-node benchmark/stable-benchmarks.ts
+
+SeaDix Stable Performance Benchmarks
+=====================================
+Using multiple runs with warm-up and statistical analysis
+CV% = Coefficient of Variation (lower is more stable)
+  Running: Insert
+  Warming up...
+  Running: Search (hit)
+  Warming up...
+  Running: Search (miss)
+  Warming up...
+
+=== Core Operations ===
+Test Name                Mean Ops/sec   Median      CV%     Range
+--------------------------------------------------------------------------------
+Insert                   253,374        242,745     31.4    121929-463849
+Search (hit)             2,673,777      3,041,094   24.1    883581-3130645
+Search (miss)            2,559,871      2,198,575   24.9    1561463-3382961
+  Running: Individual Insert 100
+  Warming up...
+  Running: Batch Insert 100
+  Warming up...
+  Running: Individual Search 100
+  Warming up...
+  Running: Batch Search 100
+  Warming up...
+
+=== Batch vs Individual ===
+Test Name                Mean Ops/sec   Median      CV%     Range
+--------------------------------------------------------------------------------
+Individual Insert 100    18,084         18,283      9.9     15330-21549
+Batch Insert 100         16,687         19,081      25.8    7807-19851
+Individual Search 100    26,379         27,855      13.3    20897-30193
+Batch Search 100         18,613         19,723      9.0     14939-19898
+  Running: CPU Stability
+  Warming up...
+
+=== System Stability Check ===
+Test Name                Mean Ops/sec   Median      CV%     Range
+--------------------------------------------------------------------------------
+CPU Stability            191,289        192,117     1.9     180055-192957
+
+=== Variance Analysis ===
+CV% < 5%:  Excellent stability
+CV% 5-10%: Good stability
+CV% 10-20%: Moderate variance
+CV% > 20%: High variance (system load/thermal throttling)
+
+High Variance Detected:
+  - Insert: 31.4% CV
+  - Search (hit): 24.1% CV
+  - Search (miss): 24.9% CV
+  - Batch Insert 100: 25.8% CV
+
+Recommendations:
+  1. Close unnecessary applications
+  2. Ensure laptop is plugged in (not on battery)
+  3. Set Windows power plan to 'High Performance'
+  4. Run: node --expose-gc benchmark/stable-benchmark.ts
+  5. Let laptop cool down if warm

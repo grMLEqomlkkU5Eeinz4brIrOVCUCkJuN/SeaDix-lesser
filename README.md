@@ -182,7 +182,7 @@ Each JavaScript function call to C++ requires:
 ### Performance Characteristics
 
 - **Insertion**: O(m) where m is the length of the word
-- **Search**: O(m) where m is the length of the word  
+- **Search**: O(m) where m is the length of the word
 - **Prefix Search**: O(m + k) where m is prefix length and k is number of results
 - **Node Cleanup**: O(1) per node using parent pointer optimization
 
@@ -200,6 +200,7 @@ Run performance tests:
 ```bash
 npm run benchmark        # Simple benchmark
 npm run benchmark:full  # Comprehensive benchmark
+npm run benchmark:stable  # Comprehensive benchmark
 ```
 
 ## Development
