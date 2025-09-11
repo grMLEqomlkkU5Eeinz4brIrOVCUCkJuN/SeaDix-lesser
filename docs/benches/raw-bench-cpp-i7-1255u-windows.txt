@@ -1,0 +1,46 @@
+PS C:\Users\grml\Projects\SeaDix> ./test_performance.exe
+RadixTrie C++ Performance Test
+==============================
+
+=== Insertion Performance Test ===
+Small dataset (10 words): 2.7 ╬╝s per word
+Operations per second: 370370
+Medium dataset (58 words): 1.18966 ╬╝s per word
+Operations per second: 840580
+Large dataset (1000 words): 0.447 ╬╝s per word
+Operations per second: 2.23714e+06
+
+=== Prefix Sharing Performance Test ===
+No common prefixes (5 words): 0.4 ╬╝s per word
+Common prefixes (5 words): 1 ╬╝s per word
+Deep prefix sharing (6 words): 0.5 ╬╝s per word
+
+=== Search Performance Test ===
+Small dataset (10 words): 0.0161 ╬╝s per search
+Searches per second: 6.21118e+07
+Medium dataset (58 words): 0.0374138 ╬╝s per search
+Searches per second: 2.67281e+07
+Large dataset (1000 words): 0.039781 ╬╝s per search
+Searches per second: 2.51376e+07
+
+=== Bulk Insertion Performance Test ===
+Small dataset (10 words): 0.3 ╬╝s per word
+Operations per second: 3.33333e+06
+Trie size: 10
+
+Medium dataset (58 words): 0.655172 ╬╝s per word
+Operations per second: 1.52632e+06
+Trie size: 58
+
+Large dataset (1000 words): 0.645 ╬╝s per word
+Operations per second: 1.55039e+06
+Trie size: 1000
+
+=== Memory Usage Test ===
+Inserted 1000 words in 630 ╬╝s
+Average per word: 0.63 ╬╝s
+Trie size: 1000
+Performed 100000 searches in 4483 ╬╝s
+Average per search: 0.04483 ╬╝s
+
+Performance test completed!
