@@ -47,7 +47,7 @@
   "description": "A Radix Trie implementation for Node.js built with C++",
   "devDependencies": {
     "@types/jest": "^30.0.0",
-    "@types/node": "^24.3.0",
+    "@types/node": "^24.4.0",
     "eslint": "^9.33.0",
     "jest": "^30.0.5",
     "nodemon": "^3.1.10",
