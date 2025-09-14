@@ -24,6 +24,10 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
+    - name: Download enable1.txt word list
+      run: |
+        curl -o enable1.txt https://norvig.com/ngrams/enable1.txt
+
     - name: Run tests
       run: |
         npm run build
