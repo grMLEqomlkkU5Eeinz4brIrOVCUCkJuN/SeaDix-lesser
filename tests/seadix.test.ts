@@ -909,7 +909,7 @@ describe("SeaDix", () => {
 					// Test removing some words
 					expect(trie.remove("hello")).toBe(true);
 					expect(trie.remove("world")).toBe(true);
-					expect(trie.remove("nonexistent")).toBe(false);
+					expect(trie.remove("thisworddefinitelydoesnotexist")).toBe(false);
 
 					expect(trie.size()).toBe(originalCount - 2);
 					expect(trie.search("hello")).toBe(false);
