@@ -31,7 +31,7 @@ jobs:
       run: npm run build:all
 
     - name: Download enable word list
-      run: curl -L https://raw.githubusercontent.com/dwyl/english-words/master/words_alpha.txt -o enable1.txt
+      run: wget https://norvig.com/ngrams/enable1.txt
 
     - name: Run tests
       run: npm test
