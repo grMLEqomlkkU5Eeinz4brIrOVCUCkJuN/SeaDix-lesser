@@ -240,6 +240,29 @@ console.log(json.words); // ["hello", "world"]
 console.log(json.options.ignoreCase); // false
 ```
 
+#### `bulk_insert_from_file(path: string, buffer_size?: number): number`
+
+Reads and inserts words from a file into the trie using a streaming approach with a configurable buffer size.
+
+**Parameters:**
+
+* `path` (`string`) – Path to the input file. Each word should be on a new line.
+* `buffer_size` (`number`, optional) – Size of the read buffer in bytes. Defaults to `1024 * 1024` (1MB).
+
+**Returns:**
+
+* `number` – The number of words inserted from the file.
+
+**Example:**
+
+```cpp
+RadixTrie trie;
+size_t count = trie.bulk_insert_from_file("data/words.txt", 512 * 1024); // 512KB buffer
+std::cout << "Inserted " << count << " words." << std::endl;
+```
+
+
+
 ### Static Methods
 
 #### `SeaDix.fromWords(words: string[], options?: SeaDixOptions): SeaDix`

@@ -16,6 +16,7 @@ class SeaDix : public Napi::ObjectWrap<SeaDix> {
 	// Methods exposed to JavaScript
 	Napi::Value Insert(const Napi::CallbackInfo &info);
 	Napi::Value InsertBatch(const Napi::CallbackInfo &info);
+	Napi::Value InsertFromFile(const Napi::CallbackInfo &info); // New method
 	Napi::Value Search(const Napi::CallbackInfo &info);
 	Napi::Value SearchBatch(const Napi::CallbackInfo &info);
 	Napi::Value StartsWith(const Napi::CallbackInfo &info);

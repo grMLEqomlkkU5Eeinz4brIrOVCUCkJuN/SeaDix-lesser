@@ -99,6 +99,8 @@ Returns an array of all words in the trie.
 #### `clear(): void`
 Removes all words from the trie.
 
+
+
 ### Batch Operations (Recommended)
 
 For inserting multiple words, use batch operations to reduce N-API overhead:
@@ -163,6 +165,10 @@ Creates a new trie with initial words.
 ## N-API Overhead Investigation
 
 This project is primarily about understanding the performance characteristics of Node.js C++ addons. Here's what I've discovered:
+
+### File Streaming Insertion
+#### `insertFromFile(filePath: string, bufferSize?: number): number`
+Allows file streaming, a buffer can be provided, but the default is 1 MB (note that the user needs to multiply by 1024 for size.).
 
 ### The N-API Boundary Problem
 

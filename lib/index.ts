@@ -12,6 +12,7 @@ const native = require("../build/Release/seadix");
 interface NativeSeaDix {
   insert(word: string): void;
   insertBatch(words: string[]): number;
+  insertFromFile(path: string, bufferSize?: number): number;  // Added this line
   search(word: string): boolean;
   searchBatch(words: string[]): boolean[];
   startsWith(prefix: string): boolean;
@@ -156,6 +157,44 @@ export class SeaDix {
 	}
 
 	/**
+	 * Insert words from a text file using streaming
+	 * This is highly efficient for large files as it processes them in chunks
+	 *
+	 * @param filePath - Path to the text file containing words (one per line)
+	 * @param bufferSize - Buffer size in bytes for file streaming (default: 1MB)
+	 * @returns Number of words successfully inserted
+	 * @throws {TypeError} If filePath is not a string
+	 * @throws {Error} If file cannot be read or buffer size is invalid
+	 *
+	 * @example
+	 * ```typescript
+	 * // Insert from file with default 1MB buffer
+	 * const count = trie.insertFromFile('./words.txt');
+	 *
+	 * // Insert from file with custom 1KB buffer
+	 * const count2 = trie.insertFromFile('./words.txt', 1024);
+	 * console.log(`Inserted ${count2} words`);
+	 * ```
+	 */
+	insertFromFile(filePath: string, bufferSize?: number): number {
+		if (typeof filePath !== "string") {
+			throw new TypeError("File path must be a string");
+		}
+
+		if (bufferSize !== undefined) {
+			if (typeof bufferSize !== "number" || bufferSize <= 0) {
+				throw new Error("Buffer size must be a positive number");
+			}
+		}
+
+		try {
+			return this.nativeTrie.insertFromFile(filePath, bufferSize);
+		} catch (error: any) {
+			throw new Error(`Failed to insert from file: ${error.message}`);
+		}
+	}
+
+	/**
    * Search for a word in the trie
    *
    * @param word - The word to search for
@@ -202,7 +241,7 @@ export class SeaDix {
 		}
 
 		// Normalize all words before batch search
-		const normalizedWords = words.map(word => 
+		const normalizedWords = words.map(word =>
 			word && typeof word === "string" ? this.normalizeWord(word) : ""
 		);
 
@@ -309,7 +348,7 @@ export class SeaDix {
 		}
 
 		// Normalize all words before batch remove
-		const normalizedWords = words.map(word => 
+		const normalizedWords = words.map(word =>
 			word && typeof word === "string" ? this.normalizeWord(word) : ""
 		);
 

@@ -16,6 +16,8 @@ Napi::Object SeaDix::Init(Napi::Env env, Napi::Object exports) {
 		env, "SeaDix",
 		{InstanceMethod("insert", &SeaDix::Insert),
 		 InstanceMethod("insertBatch", &SeaDix::InsertBatch),
+		 InstanceMethod("insertFromFile",
+						&SeaDix::InsertFromFile), // New method
 		 InstanceMethod("search", &SeaDix::Search),
 		 InstanceMethod("searchBatch", &SeaDix::SearchBatch),
 		 InstanceMethod("startsWith", &SeaDix::StartsWith),
@@ -242,6 +244,54 @@ Napi::Value SeaDix::RemoveBatch(const Napi::CallbackInfo &info) {
 // Module initialization
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
 	return SeaDix::Init(env, exports);
+}
+
+// New InsertFromFile method
+Napi::Value SeaDix::InsertFromFile(const Napi::CallbackInfo &info) {
+	Napi::Env env = info.Env();
+
+	// Validate arguments
+	if (info.Length() < 1 || !info[0].IsString()) {
+		Napi::TypeError::New(env, "File path string argument expected")
+			.ThrowAsJavaScriptException();
+		return env.Undefined();
+	}
+
+	std::string file_path = info[0].As<Napi::String>().Utf8Value();
+
+	// Default buffer size of 1MB, but allow override
+	size_t buffer_size = 1024 * 1024; // 1MB default
+
+	// Check for optional buffer size parameter
+	if (info.Length() >= 2 && info[1].IsNumber()) {
+		double buffer_size_double = info[1].As<Napi::Number>().DoubleValue();
+
+		// Validate buffer size
+		if (buffer_size_double <= 0 || buffer_size_double > SIZE_MAX) {
+			Napi::RangeError::New(
+				env, "Buffer size must be positive and within valid range")
+				.ThrowAsJavaScriptException();
+			return env.Undefined();
+		}
+
+		buffer_size = static_cast<size_t>(buffer_size_double);
+
+		// Ensure minimum buffer size of 1KB for efficiency
+		if (buffer_size < 1024) {
+			buffer_size = 1024;
+		}
+	}
+
+	try {
+		size_t words_inserted =
+			trie_.bulk_insert_from_file(file_path, buffer_size);
+		return Napi::Number::New(env, static_cast<double>(words_inserted));
+	} catch (const std::exception &e) {
+		Napi::Error::New(env,
+						 std::string("Failed to insert from file: ") + e.what())
+			.ThrowAsJavaScriptException();
+		return env.Undefined();
+	}
 }
 
 // Register the module

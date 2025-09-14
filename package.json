@@ -18,10 +18,11 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "benchmark": "ts-node benchmark/simple-benchmark.ts",
+    "benchmark:file": "ts-node benchmark/file-stream-benchmark.ts",
     "benchmark:full": "ts-node benchmark/benchmark.ts",
     "benchmark:stable": "ts-node benchmark/stable-benchmarks.ts",
     "format:cc": "find . -name \"*.cc\" -exec clang-format -i {} \\;",
-    "format:all": "find . \\( -name \"*.cc\" -o -name \"*.cpp\" -o -name \"*.h\" \\) -exec clang-format -i {} \\;",
+    "format:all": "eslint . --fix && find . \\( -name \"*.cc\" -o -name \"*.cpp\" -o -name \"*.h\" \\) -exec clang-format -i {} \\;",
     "format": "find . \\( -name \"*.cc\" -o -name \"*.cpp\" -o -name \"*.h\" \\) -exec clang-format -i {} \\;",
     "cpp:test:build": "make -f Makefile.test",
     "cpp:test:run": "make -f Makefile.test run",
@@ -31,7 +32,8 @@
     "cpp:test:o2": "make -f Makefile.test o2",
     "cpp:test:o0": "make -f Makefile.test o0",
     "cpp:test:help": "make -f Makefile.test help",
-	"build-test-bench": "npm run build:all && npm run test && npm run benchmark:stable"
+	"build-test-bench": "npm run build:all && npm run test && npm run benchmark:stable",
+	"getenable": "wget https://norvig.com/ngrams/enable1.txt"
   },
   "gypfile": true,
   "keywords": [

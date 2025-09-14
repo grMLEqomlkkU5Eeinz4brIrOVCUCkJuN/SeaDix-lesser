@@ -1,5 +1,6 @@
 #include "RadixTrie.h"
 #include <algorithm>
+#include <fstream>
 
 RadixTrie::RadixTrie() : root(std::make_unique<Node>()), word_count_(0) {}
 
@@ -45,6 +46,106 @@ RadixTrie::Node *RadixTrie::find_node(std::string_view word) const {
 	}
 
 	return current;
+}
+
+// file streaming, but the user decides the size
+size_t RadixTrie::bulk_insert_from_file(const std::string &path,
+										size_t buffer_size) {
+	std::ifstream file(path, std::ios::binary);
+	if (!file.is_open()) {
+		throw std::runtime_error("Failed to open file: " + path);
+	}
+
+	// Allocate buffer on heap to avoid stak overflow
+	auto buffer = std::make_unique<char[]>(buffer_size);
+	if (!buffer) {
+		throw std::runtime_error("Failed to allocate buffer of size: " +
+								 std::to_string(buffer_size));
+	}
+
+	size_t words_inserted = 0;
+	std::string leftover; // Handle words that span buffer boundaries
+
+	while (!file.eof()) {
+		file.read(buffer.get(), buffer_size);
+		std::streamsize bytes_read = file.gcount();
+
+		if (bytes_read <= 0) {
+			break;
+		}
+
+		// Create string view of the buffer data
+		std::string current_chunk =
+			leftover + std::string(buffer.get(), bytes_read);
+		leftover.clear();
+
+		size_t start = 0;
+		size_t pos = 0;
+
+		// Process words line by line
+		while (pos < current_chunk.length()) {
+			char c = current_chunk[pos];
+
+			if (c == '\n' || c == '\r') {
+				if (pos > start) {
+					// Extract word (trim whitespace)
+					std::string_view word_view(current_chunk.data() + start,
+											   pos - start);
+
+					// Trim trailing whitespace
+					while (!word_view.empty() &&
+						   std::isspace(word_view.back())) {
+						word_view.remove_suffix(1);
+					}
+					// Trim leading whitespace
+					while (!word_view.empty() &&
+						   std::isspace(word_view.front())) {
+						word_view.remove_prefix(1);
+					}
+
+					if (!word_view.empty()) {
+						insert(word_view);
+						++words_inserted;
+					}
+				}
+
+				// Skip consecutive newlines/carriage returns
+				while (pos < current_chunk.length() &&
+					   (current_chunk[pos] == '\n' ||
+						current_chunk[pos] == '\r')) {
+					++pos;
+				}
+				start = pos;
+			} else {
+				++pos;
+			}
+		}
+
+		// Handle remaining partial word that might span to next buffer
+		if (start < current_chunk.length() && !file.eof()) {
+			leftover = current_chunk.substr(start);
+		} else if (start < current_chunk.length()) {
+			// This is the last chunk, process any remaining word
+			std::string_view word_view(current_chunk.data() + start,
+									   current_chunk.length() - start);
+
+			// Trim whitespace
+			while (!word_view.empty() && std::isspace(word_view.back())) {
+				word_view.remove_suffix(1);
+			}
+			while (!word_view.empty() && std::isspace(word_view.front())) {
+				word_view.remove_prefix(1);
+			}
+
+			if (!word_view.empty()) {
+				insert(word_view);
+				++words_inserted;
+			}
+		}
+	}
+
+	file.close();
+	return words_inserted;
 }
 
 void RadixTrie::collect_words_from_node(
