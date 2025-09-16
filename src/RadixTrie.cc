@@ -1,25 +1,26 @@
 #include "RadixTrie.h"
 #include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <fstream>
 #include <numeric>
 #include <unordered_map>
-#include <cctype>
 
 RadixTrie::RadixTrie() : root(std::make_unique<Node>()), word_count_(0) {}
 
 RadixTrie::ChildVec::iterator RadixTrie::find_child(Node *node, char c) {
 	auto &v = node->children;
 	return std::lower_bound(v.begin(), v.end(), c,
-							 [](const std::pair<char, std::unique_ptr<Node>> &p,
-								char key) { return p.first < key; });
+							[](const std::pair<char, std::unique_ptr<Node>> &p,
+							   char key) { return p.first < key; });
 }
 
-RadixTrie::ChildVec::const_iterator RadixTrie::find_child(const Node *node, char c) {
+RadixTrie::ChildVec::const_iterator RadixTrie::find_child(const Node *node,
+														  char c) {
 	const auto &v = node->children;
 	return std::lower_bound(v.begin(), v.end(), c,
-							 [](const std::pair<char, std::unique_ptr<Node>> &p,
-								char key) { return p.first < key; });
+							[](const std::pair<char, std::unique_ptr<Node>> &p,
+							   char key) { return p.first < key; });
 }
 
 size_t RadixTrie::common_prefix_length(std::string_view s1,
@@ -68,7 +69,7 @@ RadixTrie::Node *RadixTrie::find_node(std::string_view word) const {
 
 // file streaming, but the user decides the size
 size_t RadixTrie::bulk_insert_from_file(const std::string &path,
-											 size_t buffer_size) {
+										size_t buffer_size) {
 	std::ifstream file(path, std::ios::binary);
 	if (!file.is_open()) {
 		throw std::runtime_error("Failed to open file: " + path);
@@ -78,7 +79,7 @@ size_t RadixTrie::bulk_insert_from_file(const std::string &path,
 	auto buffer = std::make_unique<char[]>(buffer_size);
 	if (!buffer) {
 		throw std::runtime_error("Failed to allocate buffer of size: " +
-									 std::to_string(buffer_size));
+								 std::to_string(buffer_size));
 	}
 
 	size_t words_inserted = 0;
@@ -100,11 +101,16 @@ size_t RadixTrie::bulk_insert_from_file(const std::string &path,
 				std::streamsize seg_len = i - line_start;
 				if (seg_len > 0 || !carry.empty()) {
 					if (!carry.empty()) {
-						carry.append(buffer.get() + line_start, static_cast<size_t>(seg_len));
+						carry.append(buffer.get() + line_start,
+									 static_cast<size_t>(seg_len));
 						// Trim carry
 						size_t b = 0, e = carry.size();
-						while (e > b && std::isspace(static_cast<unsigned char>(carry[e - 1]))) --e;
-						while (b < e && std::isspace(static_cast<unsigned char>(carry[b]))) ++b;
+						while (e > b && std::isspace(static_cast<unsigned char>(
+											carry[e - 1])))
+							--e;
+						while (b < e && std::isspace(static_cast<unsigned char>(
+											carry[b])))
+							++b;
 						if (e > b) {
 							std::string_view word_view(carry.data() + b, e - b);
 							insert(word_view);
@@ -112,11 +118,16 @@ size_t RadixTrie::bulk_insert_from_file(const std::string &path,
 						}
 						carry.clear();
 					} else {
-						// Create a view into the current buffer segment and trim without copying
+						// Create a view into the current buffer segment and
+						// trim without copying
 						const char *seg_ptr = buffer.get() + line_start;
 						size_t b = 0, e = static_cast<size_t>(seg_len);
-						while (e > b && std::isspace(static_cast<unsigned char>(seg_ptr[e - 1]))) --e;
-						while (b < e && std::isspace(static_cast<unsigned char>(seg_ptr[b]))) ++b;
+						while (e > b && std::isspace(static_cast<unsigned char>(
+											seg_ptr[e - 1])))
+							--e;
+						while (b < e && std::isspace(static_cast<unsigned char>(
+											seg_ptr[b])))
+							++b;
 						if (e > b) {
 							std::string_view word_view(seg_ptr + b, e - b);
 							insert(word_view);
@@ -126,7 +137,8 @@ size_t RadixTrie::bulk_insert_from_file(const std::string &path,
 				}
 
 				// Skip consecutive CR/LF characters
-				while (i + 1 < bytes_read && (buffer[i + 1] == '\n' || buffer[i + 1] == '\r')) {
+				while (i + 1 < bytes_read &&
+					   (buffer[i + 1] == '\n' || buffer[i + 1] == '\r')) {
 					++i;
 				}
 				line_start = i + 1;
@@ -135,15 +147,18 @@ size_t RadixTrie::bulk_insert_from_file(const std::string &path,
 
 		// Handle remaining partial line at the end of the buffer
 		if (line_start < bytes_read) {
-			carry.append(buffer.get() + line_start, static_cast<size_t>(bytes_read - line_start));
+			carry.append(buffer.get() + line_start,
+						 static_cast<size_t>(bytes_read - line_start));
 		}
 	}
 
 	// Process any remaining carry as the last line
 	if (!carry.empty()) {
 		size_t b = 0, e = carry.size();
-		while (e > b && std::isspace(static_cast<unsigned char>(carry[e - 1]))) --e;
-		while (b < e && std::isspace(static_cast<unsigned char>(carry[b]))) ++b;
+		while (e > b && std::isspace(static_cast<unsigned char>(carry[e - 1])))
+			--e;
+		while (b < e && std::isspace(static_cast<unsigned char>(carry[b])))
+			++b;
 		if (e > b) {
 			std::string_view word_view(carry.data() + b, e - b);
 			insert(word_view);
@@ -189,7 +204,8 @@ void RadixTrie::insert(std::string_view word) {
 				std::string(word.data() + pos, word.length() - pos), current,
 				first_char);
 			new_node->is_end = true;
-			current->children.insert(it, std::make_pair(first_char, std::move(new_node)));
+			current->children.insert(
+				it, std::make_pair(first_char, std::move(new_node)));
 			++word_count_;
 			return;
 		}
@@ -378,7 +394,8 @@ void RadixTrie::cleanup_orphaned_nodes(std::string_view word) {
 			// can be removed
 			if (current->children.empty() && !current->is_end) {
 				auto pit = find_child(parent, char_to_remove);
-				if (pit != parent->children.end() && pit->first == char_to_remove) {
+				if (pit != parent->children.end() &&
+					pit->first == char_to_remove) {
 					parent->children.erase(pit);
 				}
 				current = parent; // Move up to parent
@@ -437,7 +454,8 @@ void RadixTrie::split_node(Node *current, char first_char, size_t common_len,
 	char old_first_char = old_child->key[0];
 	Node *old_child_raw = old_child.get();
 	auto insert_pos = find_child(intermediate.get(), old_first_char);
-	intermediate->children.insert(insert_pos, std::make_pair(old_first_char, std::move(old_child)));
+	intermediate->children.insert(
+		insert_pos, std::make_pair(old_first_char, std::move(old_child)));
 	// Fix old child's parent linkage
 	old_child_raw->parent = intermediate.get();
 	old_child_raw->parent_char = old_first_char;
@@ -448,7 +466,7 @@ void RadixTrie::split_node(Node *current, char first_char, size_t common_len,
 
 // Helper method to calculate heights recursively
 void RadixTrie::calculate_heights_recursive(const Node *node, int current_depth,
-												std::vector<int> &heights) const {
+											std::vector<int> &heights) const {
 	if (!node)
 		return;
 

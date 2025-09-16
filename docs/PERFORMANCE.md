@@ -1,208 +1,63 @@
-# N-API Performance Investigation
+# Performance
 
-## Overview
-
-This document explores the performance characteristics of Node.js C++ addons and the overhead introduced by the N-API boundary. This is an experimental investigation into JavaScript/C++ interop performance.
-
-## N-API Overhead Analysis
-
-### The Performance Gap
-
-| Operation | Pure C++ | Node.js (N-API) | Overhead Factor |
-|-----------|----------|-----------------|-----------------|
-| **Insertion** | 1.46M ops/sec | 208K ops/sec | **7x slower** |
-| **Search** | 17.9M ops/sec | 625K ops/sec | **29x slower** |
-| **Size Check** | - | 1.4M ops/sec | - |
-
-### Why N-API is Slow
-
-Each JavaScript function call to C++ involves:
-
-1. **Parameter Marshalling**: Convert JS values to C++ types
-2. **String Conversion**: JS string → C++ string_view (expensive)
-3. **Function Call Overhead**: N-API wrapper execution
-4. **Memory Management**: Cross-boundary memory handling
-5. **Return Value Conversion**: C++ result → JS value
-
-### Time Complexity (Algorithm Only)
-
-| Operation | Time Complexity | Notes |
-|-----------|----------------|-------|
-| `insert(word)` | O(m) | m = word length |
-| `search(word)` | O(m) | m = word length |
-| `startsWith(prefix)` | O(m) | m = prefix length |
-| `wordsWithPrefix(prefix)` | O(m + k) | m = prefix length, k = number of results |
-| `remove(word)` | O(m) | m = word length |
-
-### Space Complexity
-
-- **Memory Usage**: O(total characters in all words)
-- **Node Overhead**: Each node stores key, end flag, parent pointer, and children map
-- **Compression**: Radix trie compresses common prefixes, reducing memory usage
-
-## What I'm Trying to Figure Out
-
-### 1. Batch Operations (Implemented!)
-
-I've implemented batch operations that reduce N-API overhead:
-
-```typescript
-// Individual calls - each has N-API overhead
-for (const word of words) {
-    trie.insert(word);  // 7x slower than pure C++
-}
-
-// Batch operations - single N-API call
-trie.insertBatch(words);  // 36% faster than individual calls!
-```
-
-**Results:**
-- **36% performance improvement** for batch operations
-- Single N-API call instead of N calls
-- Reduced string conversion overhead
-- Better memory locality
-
-### 2. Memory Management Across Boundaries
-
-Managing memory between JavaScript and C++ is complex:
-
-```cpp
-// C++ side - automatic cleanup
-std::unique_ptr<Node> node = std::make_unique<Node>();
-// Memory automatically freed when out of scope
-```
-
-```javascript
-// JavaScript side - N-API handles conversion
-const result = trie.search('word');  // C++ bool → JS boolean
-```
-
-**Challenges:**
-- String conversion overhead
-- Memory ownership across boundaries
-- Garbage collection interaction
-
-## Experimental Findings
-
-### 1. Batch Operations Work!
-
-I implemented batch operations that reduce N-API overhead:
-
-```typescript
-// Individual calls - each crosses N-API boundary
-words.forEach(word => trie.insert(word));           // 2.28ms for 1000 words
-for (const word of words) trie.insert(word);        // 2.28ms for 1000 words
-
-// Batch operations - single N-API call
-trie.insertBatch(words);                            // 1.44ms for 1000 words (36% faster!)
-```
-
-**Why batch operations work:**
-- Single N-API call instead of N calls
-- Reduced string conversion overhead
-- Better memory locality in C++
-- Less JavaScript/C++ boundary crossing
-
-### 2. The C++ Implementation is Fast
-
-Pure C++ performance is good:
-
-```cpp
-// Pure C++ - no N-API overhead
-trie.insert("word");  // 1.46M ops/sec
-trie.search("word");  // 17.9M ops/sec
-```
-
-**The bottleneck is in the N-API layer, not the algorithm.**
-
-## Testing Performance
-
-### Pure C++ Performance Test
-
-Run the C++ performance test to see the underlying algorithm speed:
-
-```bash
-make -f Makefile.test run
-```
-
-This shows the true performance without N-API overhead.
-
-### Node.js Performance Test
-
-Run the Node.js benchmarks to see N-API overhead:
-
-```bash
-npm run benchmark:full
-```
-
-### Performance Comparison
-
-| Test Type | Pure C++ | Node.js | Overhead |
-|-----------|----------|---------|----------|
-| **Insertion** | 1.46M ops/sec | 208K ops/sec | 7x slower |
-| **Search** | 17.9M ops/sec | 625K ops/sec | 29x slower |
-| **Bulk Insert** | 1.45M ops/sec | 208K ops/sec | 7x slower |
+## Test Environment
+- **CPU**: Intel i5-4210U @ 2.4GHz (2 cores, 4 threads)
+- **RAM**: 8GB DDR3
+- **Node.js**: v18+
 
 ## Memory Usage
 
-### Node Structure
+| Dataset | Words | Memory | Bytes/Word | Overhead |
+|---------|-------|--------|------------|----------|
+| 3M words| 3,080,821| 281MB  | 95B        | 97%      |
+| 6M words| 6,273,234| 735MB  | 123B       | 95%      |
 
-Each node in the trie contains:
-- `std::string key` - Compressed prefix (typically small)
-- `bool is_end` - End-of-word flag (1 byte)
-- `Node* parent` - Parent pointer (8 bytes)
-- `char parent_char` - Parent character (1 byte)
-- `std::unordered_map<char, std::unique_ptr<Node>> children` - Children map
+*Overhead includes vector storage, allocator metadata, and node structure*
 
-### Memory Efficiency
+## Operations/sec (i5-4210U)
 
-The radix trie uses memory efficiently because:
-- Common prefixes are shared between words
-- No redundant storage of common substrings
-- Compressed representation reduces memory footprint
+### Core Operations (varies significantly between runs)
+| Operation | Small Dataset | Medium Dataset | Large Dataset |
+|-----------|---------------|----------------|---------------|
+| Insert    | 177K-642K     | 193K-265K      | 1.3M-1.8M     |
+| Search    | 1.8M (1000x)  | 1.7M (1000x)   | 927K (1000x)  |
+| Remove    | 566K (1000x)  | 599K (1000x)   | 906K (1000x)  |
 
-### Example Memory Usage
+*Numbers vary significantly between runs due to system load*
 
-For 1000 words with average length 10:
-- **Naive storage**: ~10,000 characters
-- **Radix trie**: ~3,000-5,000 characters (depending on prefix sharing)
+### Batch vs Individual
+| Words | Batch Insert | Individual Insert | Winner |
+|-------|--------------|-------------------|--------|
+| 100   | 18K ops/sec  | 20K ops/sec      | Individual |
+| 1000  | 946K ops/sec | 812K ops/sec     | Batch |
 
-## What I'm Still Figuring Out
+### File Loading
+| File Size | Time | Rate |
+|-----------|------|------|
+| 3M words  | 1.6s | 1.9M words/s |
+| 6M words  | 2.6s | 2.4M words/s |
 
-### 1. Can N-API Overhead Be Reduced?
+## C++ vs Node.js Overhead
 
-Current approaches I've tried:
-- Bulk operations (didn't help)
-- String pre-allocation (minimal improvement)
-- Batch operations (worse performance)
+| Operation | Pure C++ | Node.js | Overhead |
+|-----------|----------|---------|----------|
+| Insert    | 2.5M/sec | 750K/sec| 3x slower |
+| Search    | 7.9M/sec | 2.8M/sec| 3x slower |
 
-**Still exploring:**
-- WebAssembly as alternative
-- Different N-API patterns
-- Memory management optimizations
+*N-API overhead includes string conversion, function marshalling, and memory management*
 
-### 2. When Is N-API Worth It?
+## System Variance
 
-The 7-29x overhead makes me question when C++ addons are beneficial:
+**High variance detected in benchmarks:**
+- Insert: 20.4% CV
+- Search: 27.0% CV  
+- Batch operations: 18-20% CV
 
-**Maybe worth it:**
-- Complex algorithms that are hard to implement in JS
-- CPU-intensive operations
-- When the C++ speed gain > N-API overhead
+*Recommendations: Close unnecessary apps, use high-performance power plan, ensure adequate cooling*
 
-**Probably not worth it:**
-- Simple operations called frequently
-- String-heavy operations
-- When N-API overhead dominates
+## Recommendations
 
-### 3. Alternative Approaches
-
-**WebAssembly might be better:**
-- Lower overhead than N-API
-- Better tooling and debugging
-- More portable across platforms
-
-**Pure JavaScript might be sufficient:**
-- Modern JS engines are good
-- No cross-boundary overhead
-- Easier to maintain and debug
+- **Small datasets (5-100 words)**: Use batch operations
+- **Large datasets (500+ words)**: Use individual operations  
+- **File loading**: Use `insertFromFile()` with default 1MB buffer
+- **JSON handling**: Process in JavaScript, not C++

@@ -1,39 +1,31 @@
-# SeaDix API Documentation
+# API Reference
 
-## Class: SeaDix
+## Constructor
 
-An experimental Radix Trie implementation for Node.js with C++ backend. This is a learning project focused on understanding N-API performance characteristics.
+### `new SeaDix(options?)`
 
-### Constructor
-
-#### `new SeaDix(options?: SeaDixOptions)`
-
-Creates a new SeaDix instance.
+Creates a new Radix Trie instance.
 
 **Parameters:**
 - `options` (optional): Configuration object
-  - `words?: string[]` - Initial words to insert
-  - `ignoreCase?: boolean` - Whether to ignore case (default: false)
+  - `words?: string[]` - Pre-populate with words
+  - `ignoreCase?: boolean` - Case-insensitive operations (default: false)
 
 **Example:**
 ```javascript
 const trie = new SeaDix();
-const trieWithWords = new SeaDix({ words: ["hello", "world"] });
-const caseInsensitiveTrie = new SeaDix({ ignoreCase: true });
+const trieWithWords = new SeaDix({ words: ['hello', 'world'] });
+const caseInsensitive = new SeaDix({ ignoreCase: true });
 ```
 
-### Instance Methods
+## Core Operations
 
-#### `insert(word: string): void`
+### `insert(word: string): void`
 
-Inserts a word into the trie.
+Adds a word to the trie.
 
 **Parameters:**
-- `word: string` - The word to insert
-
-**Throws:**
-- `TypeError` - If word is not a string
-- `Error` - If word is empty or whitespace only
+- `word` - The word to insert
 
 **Example:**
 ```javascript
@@ -41,313 +33,312 @@ trie.insert("hello");
 trie.insert("world");
 ```
 
-#### Bulk Insertion
+### `search(word: string): boolean`
 
-For inserting multiple words, use a simple loop for optimal performance:
-
-```javascript
-// Recommended approach - 25% faster than bulk methods
-["hello", "world", "test"].forEach(word => trie.insert(word));
-
-// Alternative approach
-for (const word of words) {
-  trie.insert(word);
-}
-```
-
-#### `search(word: string): boolean`
-
-Searches for a word in the trie.
+Checks if a word exists in the trie.
 
 **Parameters:**
-- `word: string` - The word to search for
+- `word` - The word to search for
 
-**Returns:**
-- `boolean` - True if the word exists, false otherwise
-
-**Throws:**
-- `TypeError` - If word is not a string
+**Returns:** `true` if the word exists, `false` otherwise
 
 **Example:**
 ```javascript
-trie.insert("hello");
 console.log(trie.search("hello")); // true
 console.log(trie.search("hell"));  // false
 ```
 
-#### `startsWith(prefix: string): boolean`
+### `remove(word: string): boolean`
+
+Removes a word from the trie.
+
+**Parameters:**
+- `word` - The word to remove
+
+**Returns:** `true` if the word was removed, `false` if it didn't exist
+
+**Example:**
+```javascript
+const removed = trie.remove("hello");
+console.log(removed); // true
+```
+
+### `startsWith(prefix: string): boolean`
 
 Checks if any word in the trie starts with the given prefix.
 
 **Parameters:**
-- `prefix: string` - The prefix to check
+- `prefix` - The prefix to check
 
-**Returns:**
-- `boolean` - True if any word starts with the prefix
+**Returns:** `true` if any word starts with the prefix
 
-**Throws:**
-- `TypeError` - If prefix is not a string
+**Example:**
+```javascript
+console.log(trie.startsWith("he")); // true
+console.log(trie.startsWith("xyz")); // false
+```
+
+### `wordsWithPrefix(prefix: string): string[]`
+
+Returns all words that start with the given prefix.
+
+**Parameters:**
+- `prefix` - The prefix to search for
+
+**Returns:** Array of words starting with the prefix
 
 **Example:**
 ```javascript
 trie.insert("hello");
 trie.insert("help");
-console.log(trie.startsWith("he")); // true
-console.log(trie.startsWith("xyz")); // false
+trie.insert("world");
+
+console.log(trie.wordsWithPrefix("he")); // ["hello", "help"]
+console.log(trie.wordsWithPrefix(""));   // ["hello", "help", "world"]
 ```
 
-#### `getWordsWithPrefix(prefix: string): string[]`
+## Batch Operations
 
-Gets all words that start with the given prefix.
+### `insertBatch(words: string[]): number`
+
+Inserts multiple words in a single operation.
 
 **Parameters:**
-- `prefix: string` - The prefix to search for
+- `words` - Array of words to insert
 
-**Returns:**
-- `string[]` - Array of words that start with the prefix
-
-**Throws:**
-- `TypeError` - If prefix is not a string
+**Returns:** Number of words successfully inserted
 
 **Example:**
 ```javascript
-["hello", "help", "world"].forEach(word => trie.insert(word));
-console.log(trie.getWordsWithPrefix("he")); // ["hello", "help"]
-console.log(trie.getWordsWithPrefix(""));   // ["hello", "help", "world"]
+const count = trie.insertBatch(['hello', 'world', 'foo', 'bar']);
+console.log(`Inserted ${count} words`);
 ```
 
-#### `remove(word: string): boolean`
+### `searchBatch(words: string[]): boolean[]`
 
-Removes a word from the trie.
+Searches for multiple words in a single operation.
 
 **Parameters:**
-- `word: string` - The word to remove
+- `words` - Array of words to search for
 
-**Returns:**
-- `boolean` - True if the word was removed, false if not found
+**Returns:** Array of boolean results
 
-**Throws:**
-- `TypeError` - If word is not a string
+**Example:**
+```javascript
+const results = trie.searchBatch(['hello', 'world', 'missing']);
+console.log(results); // [true, true, false]
+```
+
+### `removeBatch(words: string[]): boolean[]`
+
+Removes multiple words in a single operation.
+
+**Parameters:**
+- `words` - Array of words to remove
+
+**Returns:** Array of boolean results indicating success
+
+**Example:**
+```javascript
+const removed = trie.removeBatch(['hello', 'world']);
+console.log(removed); // [true, true]
+```
+
+## File Operations
+
+### `insertFromFile(filePath: string, bufferSize?: number): number`
+
+Loads words from a file, one word per line.
+
+**Parameters:**
+- `filePath` - Path to the file
+- `bufferSize` - Buffer size in bytes (default: 1MB)
+
+**Returns:** Number of words loaded
+
+**Example:**
+```javascript
+const count = trie.insertFromFile('./words.txt');
+console.log(`Loaded ${count} words`);
+
+// With custom buffer size
+const count2 = trie.insertFromFile('./words.txt', 2 * 1024 * 1024); // 2MB
+```
+
+## Analytics
+
+### `getMemoryStats(): MemoryStats`
+
+Returns detailed memory usage statistics.
+
+**Returns:** Object with memory information
+- `totalBytes` - Total memory usage in bytes
+- `nodeCount` - Number of nodes
+- `stringBytes` - Memory used by strings
+- `overheadBytes` - Memory overhead
+- `bytesPerWord` - Average bytes per word
+
+**Example:**
+```javascript
+const stats = trie.getMemoryStats();
+console.log(`Memory usage: ${stats.totalBytes} bytes`);
+console.log(`Bytes per word: ${stats.bytesPerWord}`);
+```
+
+### `getHeightStats(): HeightStats`
+
+Returns trie height statistics.
+
+**Returns:** Object with height information
+- `minHeight` - Minimum height
+- `maxHeight` - Maximum height
+- `averageHeight` - Average height
+- `modeHeight` - Most common height
+- `allHeights` - Array of all heights
+
+**Example:**
+```javascript
+const stats = trie.getHeightStats();
+console.log(`Height range: ${stats.minHeight} - ${stats.maxHeight}`);
+```
+
+### `getWordMetrics(): WordMetrics`
+
+Returns word length statistics.
+
+**Returns:** Object with word metrics
+- `minLength` - Minimum word length
+- `maxLength` - Maximum word length
+- `averageLength` - Average word length
+- `modeLength` - Most common word length
+- `totalCharacters` - Total character count
+- `lengthDistribution` - Array of word counts by length
+
+**Example:**
+```javascript
+const metrics = trie.getWordMetrics();
+console.log(`Average word length: ${metrics.averageLength}`);
+```
+
+### `patternSearch(pattern: string): string[]`
+
+Searches for words matching a wildcard pattern.
+
+**Parameters:**
+- `pattern` - Pattern with `*` (zero or more chars) and `?` (single char)
+
+**Returns:** Array of matching words
 
 **Example:**
 ```javascript
 trie.insert("hello");
-console.log(trie.remove("hello")); // true
-console.log(trie.remove("hello")); // false
+trie.insert("help");
+trie.insert("world");
+
+console.log(trie.patternSearch("he*"));  // ["hello", "help"]
+console.log(trie.patternSearch("h?l*")); // ["help"]
+console.log(trie.patternSearch("*o*"));  // ["hello", "world"]
 ```
 
-#### `removeMany(words: string[]): boolean[]`
+## Utility Methods
 
-Removes multiple words from the trie.
+### `size(): number`
 
-**Parameters:**
-- `words: string[]` - Array of words to remove
+Returns the number of words in the trie.
 
-**Returns:**
-- `boolean[]` - Array indicating which words were successfully removed
-
-**Throws:**
-- `TypeError` - If words is not an array
+**Returns:** Number of words
 
 **Example:**
 ```javascript
-["hello", "world", "test"].forEach(word => trie.insert(word));
-const results = trie.removeMany(["hello", "xyz", "world"]);
-console.log(results); // [true, false, true]
+console.log(trie.size()); // 3
 ```
 
-#### `isEmpty(): boolean`
+### `empty(): boolean`
 
 Checks if the trie is empty.
 
-**Returns:**
-- `boolean` - True if the trie contains no words
+**Returns:** `true` if empty, `false` otherwise
 
 **Example:**
 ```javascript
-console.log(trie.isEmpty()); // true
-trie.insert("hello");
-console.log(trie.isEmpty()); // false
+console.log(trie.empty()); // false
 ```
 
-#### `size(): number`
-
-Gets the number of words in the trie.
-
-**Returns:**
-- `number` - The number of words stored in the trie
-
-**Example:**
-```javascript
-["hello", "world"].forEach(word => trie.insert(word));
-console.log(trie.size()); // 2
-```
-
-#### `getAllWords(): string[]`
-
-Gets all words in the trie.
-
-**Returns:**
-- `string[]` - Array of all words in the trie
-
-**Example:**
-```javascript
-["hello", "world"].forEach(word => trie.insert(word));
-console.log(trie.getAllWords()); // ["hello", "world"]
-```
-
-#### `clear(): void`
+### `clear(): void`
 
 Removes all words from the trie.
 
 **Example:**
 ```javascript
-["hello", "world"].forEach(word => trie.insert(word));
 trie.clear();
-console.log(trie.size()); // 0
+console.log(trie.empty()); // true
 ```
 
-#### `getStats(): TrieStats`
+### `getStats(): TrieStats`
 
-Gets statistics about the trie.
+Returns basic trie statistics.
 
-**Returns:**
-- `TrieStats` - Object containing trie statistics
-  - `wordCount: number` - Number of words
-  - `isEmpty: boolean` - Whether trie is empty
-  - `allWords: string[]` - All words in the trie
+**Returns:** Object with basic stats
+- `wordCount` - Number of words
+- `isEmpty` - Whether trie is empty
+- `allWords` - Array of all words
 
 **Example:**
 ```javascript
-["hello", "world"].forEach(word => trie.insert(word));
 const stats = trie.getStats();
-console.log(stats.wordCount); // 2
-console.log(stats.isEmpty);   // false
+console.log(`Word count: ${stats.wordCount}`);
 ```
 
-#### `toJSON(): object`
+## Serialization
 
-Converts the trie to a JSON-serializable object.
+### `toJSON(): object`
 
-**Returns:**
-- `object` - JSON object with words and options
+Exports the trie to a JSON object.
+
+**Returns:** JSON representation of the trie
 
 **Example:**
 ```javascript
-["hello", "world"].forEach(word => trie.insert(word));
 const json = trie.toJSON();
-console.log(json.words); // ["hello", "world"]
-console.log(json.options.ignoreCase); // false
+// Use JavaScript to handle JSON data for better performance
 ```
 
-#### `bulk_insert_from_file(path: string, buffer_size?: number): number`
+### `fromJSON(json: object): SeaDix`
 
-Reads and inserts words from a file into the trie using a streaming approach with a configurable buffer size.
-
-**Parameters:**
-
-* `path` (`string`) – Path to the input file. Each word should be on a new line.
-* `buffer_size` (`number`, optional) – Size of the read buffer in bytes. Defaults to `1024 * 1024` (1MB).
-
-**Returns:**
-
-* `number` – The number of words inserted from the file.
-
-**Example:**
-
-```cpp
-RadixTrie trie;
-size_t count = trie.bulk_insert_from_file("data/words.txt", 512 * 1024); // 512KB buffer
-std::cout << "Inserted " << count << " words." << std::endl;
-```
-
-
-
-### Static Methods
-
-#### `SeaDix.fromWords(words: string[], options?: SeaDixOptions): SeaDix`
-
-Creates a new SeaDix instance from an array of words.
+Creates a trie from a JSON object.
 
 **Parameters:**
-- `words: string[]` - Array of words to insert
-- `options?: SeaDixOptions` - Configuration options
+- `json` - JSON object from `toJSON()`
 
-**Returns:**
-- `SeaDix` - New SeaDix instance
+**Returns:** New SeaDix instance
 
 **Example:**
 ```javascript
-const trie = SeaDix.fromWords(["hello", "world"]);
-console.log(trie.size()); // 2
+const json = trie.toJSON();
+const newTrie = trie.fromJSON(json);
 ```
 
-#### `SeaDix.fromJSON(json: object): SeaDix`
+## Static Methods
 
-Creates a SeaDix instance from a JSON object.
+### `SeaDix.fromWords(words: string[], options?): SeaDix`
+
+Creates a new trie with initial words.
 
 **Parameters:**
-- `json: object` - JSON object created by toJSON()
+- `words` - Array of words
+- `options` - Optional configuration (same as constructor)
 
-**Returns:**
-- `SeaDix` - New SeaDix instance
+**Returns:** New SeaDix instance
 
 **Example:**
 ```javascript
-const originalTrie = new SeaDix({ words: ["hello", "world"], ignoreCase: true });
-const json = originalTrie.toJSON();
-const newTrie = SeaDix.fromJSON(json);
+const trie = SeaDix.fromWords(['hello', 'world', 'test']);
 ```
 
-## Types
+## Performance Notes
 
-### SeaDixOptions
-
-Configuration options for SeaDix constructor.
-
-```typescript
-interface SeaDixOptions {
-  words?: string[];      // Initial words to insert
-  ignoreCase?: boolean;  // Whether to ignore case (default: false)
-}
-```
-
-### TrieStats
-
-Statistics about the trie.
-
-```typescript
-interface TrieStats {
-  wordCount: number;     // Number of words in the trie
-  isEmpty: boolean;      // Whether the trie is empty
-  allWords: string[];    // All words in the trie
-}
-```
-
-## Error Handling
-
-All methods that accept string parameters will throw a `TypeError` if the parameter is not a string. Methods that accept arrays will throw a `TypeError` if the parameter is not an array.
-
-The `insert` method will throw an `Error` if the word is empty or contains only whitespace.
-
-## Performance Characteristics
-
-- **Time Complexity:**
-  - Insert: O(m) where m is the length of the word
-  - Search: O(m) where m is the length of the word
-  - Prefix Search: O(m + k) where m is prefix length and k is number of results
-  - Remove: O(m) where m is the length of the word
-
-- **Space Complexity:**
-  - O(n * m) where n is the number of words and m is the average word length
-
-## Case Sensitivity
-
-By default, SeaDix is case-sensitive. Set `ignoreCase: true` in the constructor options to enable case-insensitive operations.
-
-```javascript
-const trie = new SeaDix({ ignoreCase: true });
-trie.insert("Hello");
-console.log(trie.search("hello")); // true
-console.log(trie.search("HELLO")); // true
-```
+- **Batch operations** are recommended for 5-100 words
+- **Individual operations** are faster for large datasets (500+ words)
+- **File streaming** is most efficient for loading large datasets
+- **JSON operations** should be handled in JavaScript for better performance
+- **Pattern search** supports `*` and `?` wildcards
