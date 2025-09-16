@@ -18,23 +18,12 @@ SeaDix is a prefix tree (trie) data structure implementation that I built to exp
 
 This is primarily a learning project, not a production-ready library.
 
-## Installation (If I decide to push to NPM)
-
-```bash
-npm install seadix
-```
-
 ## Building from Source
 
+For benchmarking, use `stable-benchmarks.ts` for consistent results. For JSON import/export, use JavaScript to handle the data, as N-API conversion is costly.
 ```bash
 npm install
 npm run build:all
-```
-
-## Basic Usage
-
-```javascript
-const { SeaDix } = require("seadix");
 
 // Create a new trie
 const trie = new SeaDix();
@@ -76,6 +65,10 @@ ignoreCase: true             // Case-insensitive operations
 Adds a word to the trie.
 
 #### `search(word: string): boolean`
+
+// Pattern search (wildcards)
+console.log(trie.patternSearch("he*")); // Matches words starting with 'he'
+console.log(trie.patternSearch("h?l*")); // Matches words like 'help', 'hello', 'helmet'
 Returns true if the word exists in the trie.
 
 #### `startsWith(prefix: string): boolean`
@@ -91,29 +84,42 @@ Removes a word from the trie. Returns true if the word was removed.
 Returns true if the trie contains no words.
 
 #### `size(): number`
-Returns the number of words in the trie.
 
-#### `getAllWords(): string[]`
-Returns an array of all words in the trie.
-
-#### `clear(): void`
-Removes all words from the trie.
-
+- `insert(word: string): void`
+- `search(word: string): boolean`
+- `startsWith(prefix: string): boolean`
+- `getWordsWithPrefix(prefix: string): string[]`
+- `remove(word: string): boolean`
+- `isEmpty(): boolean`
+- `size(): number`
+- `clear(): void`
 
 
 ### Batch Operations (Recommended)
 
-For inserting multiple words, use batch operations to reduce N-API overhead:
-
-```typescript
+- `insertBatch(words: string[]): number`
+- `searchBatch(words: string[]): boolean[]`
+- `removeBatch(words: string[]): boolean[]`
+- `removeMany(words: string[]): boolean[]`
 // Batch operations - faster for small datasets (5-100 words)
 const count = trie.insertBatch(['hello', 'world', 'foo', 'bar']);
 console.log(`Inserted ${count} words`);
 
+- `insertFromFile(filePath: string, bufferSize?: number): number` — Insert words from a file, with optional buffer size (default: 1MB).
 // Batch search
 const results = trie.searchBatch(['hello', 'world', 'missing']);
+
+- `getHeightStats(): { minHeight, maxHeight, averageHeight, modeHeight, allHeights }`
+- `getMemoryStats(): { totalBytes, nodeCount, stringBytes, overheadBytes, bytesPerWord }`
+- `getWordMetrics(): { minLength, maxLength, averageLength, modeLength, lengthDistribution, totalCharacters }`
+- `patternSearch(pattern: string): string[]` — Supports `*` and `?` wildcards
 console.log(results); // [true, true, false]
 
+
+- `getStats(): { wordCount, isEmpty, allWords }`
+- `toJSON(): object`
+- `fromJSON(json: object): SeaDix`
+- `SeaDix.fromWords(words: string[], options?): SeaDix`
 // Batch remove
 const removed = trie.removeBatch(['hello', 'world']);
 console.log(removed); // [true, true]
@@ -149,12 +155,13 @@ Removes multiple words. Returns array of booleans indicating success.
 ### Utility Methods
 
 #### `getStats(): TrieStats`
+
+- For large datasets, use file streaming and batch operations for best performance.
+- Pattern search supports `*` (zero or more characters) and `?` (single character).
+- Analytics methods provide insights into trie structure and memory usage.
 Returns statistics about the trie.
 
 #### `toJSON(): object`
-Converts the trie to a JSON-serializable object.
-
-#### `fromJSON(json: object): SeaDix`
 Creates a new trie from a JSON object.
 
 ### Static Methods
