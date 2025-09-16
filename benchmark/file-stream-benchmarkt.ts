@@ -6,7 +6,7 @@ console.log("==============================");
 
 const trie = new SeaDix(8 * 1024 * 1024); // 8MB arena for massive file operations
 const filePath = "./terms.txt";
-const bufferSize = 32 * 1024 * 1024; // 1MB buffer
+const bufferSize = 8 * 1024 * 1024; // 1MB buffer
 
 // Start timing
 const start = performance.now();
@@ -42,6 +42,7 @@ for (const key of Object.keys(memStats) as Array<keyof typeof memStats>) {
 }
 console.log("Memory Stats:", JSON.stringify(formattedMemStats, null, 2));
 console.log(`Node count: ${memStats.nodeCount}`);
+console.log(`Buffer Size: ${formatBytes(bufferSize)} bytes`);
 // console.log("Word Metrics:", JSON.stringify(trie.getWordMetrics(), null, 2));
 // console.log("Pattern Search ('*a*'):", JSON.stringify(trie.patternSearch("*a*")));
 
