@@ -1,0 +1,478 @@
+
+> seadix@1.0.0 benchmark:file3
+> ts-node benchmark/file-stream-benchmark3-mil.ts
+
+SeaDix File-Streaming Benchmark
+==============================
+Words inserted: 3080821
+Time taken: 1530.67 ms
+Memory Stats: {
+  "totalBytes": "280.80 MB",
+  "nodeCount": "3.43 MB",
+  "stringBytes": "6.73 MB",
+  "overheadBytes": "274.07 MB",
+  "bytesPerWord": "95.57179953006033 B"
+}
+Node count: 3592260
+Buffer Size: 8.00 MB
+Trie JSON exported to ./trie-export.json
+Export to JSON time: 2199.76 ms
+Trie imported from JSON.
+Import from JSON time: 2949.01 ms
+
+
+> seadix@1.0.0 benchmark:filet
+> ts-node benchmark/file-stream-benchmarkt.ts
+
+SeaDix File-Streaming Benchmark
+==============================
+Words inserted: 6273234
+Time taken: 2074.62 ms
+Memory Stats: {
+  "totalBytes": "734.96 MB",
+  "nodeCount": "8.69 MB",
+  "stringBytes": "39.38 MB",
+  "overheadBytes": "695.58 MB",
+  "bytesPerWord": "122.84912311576453 B"
+}
+Node count: 9117043
+Buffer Size: 32.00 MB
+Trie JSON exported to ./trie-export.json
+Export to JSON time: 6346.65 ms
+Trie imported from JSON.
+Import from JSON time: 5237.01 ms
+
+
+> seadix@1.0.0 benchmark:full
+> ts-node benchmark/benchmark.ts
+
+SeaDix Performance Benchmarks
+=============================
+
+=== Insertion Performance ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+Short words (2 chars)         1.55           0.0015         646,162
+Medium words (5 chars)        1.22           0.0012         819,202
+Long words (34 chars)         1.33           0.0013         752,615
+Prefix words (11 chars)       3.06           0.0031         326,958
+Random words (10 chars)       5.54           0.0055         180,587
+
+=== Dataset Traversal Performance ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+No common prefixes (5 words)  0.34           0.0007         1,462,416
+Common prefixes (5 words)     0.34           0.0007         1,478,852
+Mixed prefixes (6 words)      0.37           0.0006         1,616,379
+Deep prefix sharing (6 words) 0.32           0.0005         1,878,522
+
+=== Search Performance - Small Dataset ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+Search Existing (10x)         0.13           0.0128         78,064
+Search Non-existing (10x)     0.07           0.0071         141,044
+Single Search (1000x)         0.38           0.0004         2,644,803
+
+=== Search Performance - Medium Dataset ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+Search Existing (10x)         0.23           0.0231         43,328
+Search Non-existing (10x)     0.24           0.0235         42,499
+Single Search (1000x)         0.57           0.0006         1,769,285
+
+=== Search Performance - Large Dataset ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+Search Existing (10x)         5.08           0.5076         1,970
+Search Non-existing (10x)     5.16           0.5155         1,940
+Single Search (1000x)         0.29           0.0003         3,412,969
+
+=== Delete Performance - Small Dataset ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+Delete Existing               0.15           0.0151         66,357
+Delete Non-existing           0.03           0.0030         333,333
+Single Delete (1000x)         0.37           0.0004         2,738,976
+
+=== Delete Performance - Medium Dataset ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+Delete Existing               0.04           0.0007         1,367,925
+Delete Non-existing           0.03           0.0005         1,972,789
+Single Delete (1000x)         0.33           0.0003         3,031,222
+
+=== Delete Performance - Large Dataset ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+Delete Existing               0.94           0.0009         1,067,350
+Delete Non-existing           1.45           0.0015         688,231
+Single Delete (1000x)         0.56           0.0006         1,801,802
+
+=== Loop Performance - Medium Dataset ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+forEach loop (10x)            0.41           0.0007         1,428,571
+for...of loop (10x)           0.35           0.0006         1,664,275
+for loop (10x)                0.36           0.0006         1,623,740
+
+=== Utility Operations - Medium Dataset ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+size() (10000x)               2.95           0.0003         3,388,911
+isEmpty() (10000x)            1.88           0.0002         5,331,627
+getWordsWithPrefix('') (100x) 1.75           0.0175         57,084
+getStats() (1000x)            17.17          0.0172         58,252
+getHeightStats() (100x)       1.24           0.0124         80,652
+getMemoryStats() (100x)       0.61           0.0061         162,760
+getWordMetrics() (100x)       1.12           0.0112         89,453
+patternSearch('*a*') (100x)   1.61           0.0161         62,123
+
+=== Prefix Performance - Small Dataset ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+startsWith (100x)             0.34           0.0004         2,668,248
+getWordsWithPrefix (10x)      0.13           0.0014         710,900
+
+=== Prefix Performance - Medium Dataset ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+startsWith (100x)             0.28           0.0003         3,179,089
+getWordsWithPrefix (10x)      0.21           0.0023         432,277
+
+=== Prefix Performance - Large Dataset ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+startsWith (100x)             0.45           0.0005         2,001,334
+getWordsWithPrefix (10x)      4.38           0.0486         20,569
+
+=== Case Sensitivity Performance ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+Case Sensitive Insert         0.08           0.0013         765,172
+Case Insensitive Insert       0.08           0.0014         701,330
+Case Sensitive Search (10x)   0.21           0.0004         2,752,729
+Case Insensitive Search (10x) 0.28           0.0005         2,087,833
+
+=== Serialization Performance ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+toJSON (1000x)                18.69          0.0187         53,510
+fromJSON (100x)               4.10           0.0410         24,403
+
+=== Memory Usage ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+Insert 1000 words             0.67           0.6681         1,497
+Memory per word (bytes)       4.59           4.5920         218
+Search 1000 words             0.52           0.5188         1,928
+Prefix operations             0.12           0.1195         8,368
+Delete 500 words              0.28           0.2835         3,527
+Memory after cleanup (MB)     0.03           0.0321         31,185
+
+Batch Insert Improvement: 11.1% faster
+
+=== Batch Operations Performance ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+Individual Insert (1000 words)0.91           0.0009         1,103,753
+Batch Insert (1000 words)     0.81           0.0008         1,241,157
+Individual Search (500 words) 0.33           0.0007         1,518,834
+Batch Search (500 words)      0.29           0.0006         1,723,544
+Individual Remove (200 words) 0.09           0.0004         2,280,502
+Batch Remove (200 words)      0.22           0.0011         909,091
+  Speedup: 0.91x
+  Speedup: 1.16x
+  Speedup: 1.01x
+  Speedup: 1.39x
+  Speedup: 1.03x
+
+=== Batch vs Individual Comparison ===
+Test Name                     Total (ms)     Avg/Op (ms)    Ops/sec
+---------------------------------------------------------------------------
+Individual Insert (10 words)  0.12           0.0123         81,433
+Batch Insert (10 words)       0.14           0.0135         74,019
+Individual Insert (50 words)  0.04           0.0007         1,347,709
+Batch Insert (50 words)       0.03           0.0006         1,562,500
+Individual Insert (100 words) 0.05           0.0005         2,074,689
+Batch Insert (100 words)      0.05           0.0005         2,092,050
+Individual Insert (500 words) 0.27           0.0005         1,834,189
+Batch Insert (500 words)      0.20           0.0004         2,541,942
+Individual Insert (1000 words)0.44           0.0004         2,250,225
+Batch Insert (1000 words)     0.43           0.0004         2,312,139
+
+Benchmark completed!
+
+
+> seadix@1.0.0 benchmark
+> ts-node benchmark/simple-benchmark.ts
+
+SeaDix Simple Performance Test
+==============================
+
+1. Insertion Test
+-----------------
+Inserted 35 words in 0.26ms
+Average: 0.0076ms per word
+
+2. Search Test
+--------------
+Searched 35 words in 0.14ms
+Average: 0.0041ms per search
+
+3. Prefix Search Test
+---------------------
+Prefix "a": 7 words found
+Prefix "ap": 6 words found
+Prefix "app": 6 words found
+Prefix "b": 6 words found
+Prefix "bo": 6 words found
+Prefix "boo": 6 words found
+Prefix "c": 7 words found
+Prefix "ca": 7 words found
+Prefix "car": 7 words found
+Prefix "h": 1 words found
+Prefix "he": 1 words found
+Prefix "hel": 1 words found
+Prefix searches completed in 2.11ms
+
+4. startsWith Test
+------------------
+startsWith checks completed in 0.16ms
+
+5. Delete Operations Test
+-------------------------
+Deleted 10 words in 0.10ms
+Average: 0.0100ms per delete
+
+6. Individual Operations Test
+------------------------------
+Individual inserts completed in 0.08ms
+Individual removes completed in 0.18ms
+Removed: 5/5 words
+
+7. Utility Operations Test
+--------------------------
+size() (1000x): 0.60ms
+isEmpty() (1000x): 0.24ms
+getWordsWithPrefix('') (100x): 1.12ms
+getStats() (100x): 2.78ms
+
+10. Analytics Methods Output
+----------------------------
+Height Stats: {
+  "minHeight": 1,
+  "maxHeight": 6,
+  "averageHeight": 2.92,
+  "modeHeight": 3,
+  "allHeights": [
+    3,
+    5,
+    5,
+    6,
+    4,
+    3,
+    1,
+    3,
+    3,
+    2,
+    3,
+    2,
+    1,
+    2,
+    2,
+    3,
+    4,
+    3,
+    3,
+    2,
+    2,
+    2,
+    3,
+    3,
+    3
+  ]
+}
+Memory Stats: {
+  "totalBytes": 3993,
+  "nodeCount": 48,
+  "stringBytes": 137,
+  "overheadBytes": 3856,
+  "bytesPerWord": 159.72
+}
+Word Metrics: {
+  "minLength": 3,
+  "maxLength": 12,
+  "averageLength": 6.8,
+  "modeLength": 4,
+  "totalCharacters": 170,
+  "lengthDistribution": [
+    0,
+    0,
+    0,
+    2,
+    5,
+    2,
+    2,
+    3,
+    4,
+    4,
+    1,
+    1,
+    1
+  ]
+}
+Pattern Search ('*a*'): [
+  'apple',       'applicant',
+  'application', 'applications',
+  'applied',     'apply',
+  'car',         'card',
+  'care',        'careful',
+  'carefully',   'careless',
+  'caretaker',   'download',
+  'downstairs',  'downward'
+]
+
+8. Trie Memory Usage
+--------------------
+Node.js Heap Used: 111.16 MB
+Node.js Heap Total: 132.91 MB
+Note: This includes all Node.js overhead, not just trie memory
+
+9. Trie Statistics
+------------------
+Total words: 25
+Is empty: false
+All words: 25
+Stats: {
+  "wordCount": 25,
+  "isEmpty": false,
+  "allWords": [
+    "apple",
+    "applicant",
+    "application",
+    "applications",
+    "applied",
+    "apply",
+    "book",
+    "booked",
+    "booker",
+    "booking",
+    "bookings",
+    "bookstore",
+    "car",
+    "card",
+    "care",
+    "careful",
+    "carefully",
+    "careless",
+    "caretaker",
+    "dog",
+    "door",
+    "down",
+    "download",
+    "downstairs",
+    "downward"
+  ]
+}
+
+8. Batch Operations Test
+-------------------------
+
+Batch Insert vs Individual Insert:
+Individual insert (100 words): 0.10ms
+Batch insert (100 words): 0.12ms
+Improvement: -20.0% faster
+
+Batch Search vs Individual Search:
+Individual search (50 words): 0.11ms
+Batch search (50 words): 0.13ms
+Found: 50/50 words
+
+Batch Remove vs Individual Remove:
+Individual remove (30 words): 0.09ms
+Batch remove (30 words): 0.11ms
+Removed: 30/30 words
+
+------------------------
+Clear operation completed in 0.01ms
+After clear - Size: 0, Is empty: true
+
+Test completed!
+> seadix@1.0.0 benchmark:stable
+> ts-node benchmark/stable-benchmarks.ts
+
+SeaDix Stable Performance Benchmarks
+=====================================
+Using multiple runs with warm-up and statistical analysis
+CV% = Coefficient of Variation (lower is more stable)
+  Running: getHeightStats
+  Warming up...
+  Running: getMemoryStats
+  Warming up...
+  Running: getWordMetrics
+  Warming up...
+  Running: patternSearch('*a*')
+  Warming up...
+
+=== Analytics Methods ===
+Test Name                Mean Ops/sec   Median      CV%     Range
+--------------------------------------------------------------------------------
+getHeightStats           314,683        321,750     5.2     278164-328731       
+getMemoryStats           670,353        700,280     9.1     502008-709723       
+getWordMetrics           271,235        283,607     9.4     202143-286697       
+patternSearch('*a*')     445,533        499,750     18.4    236295-506329       
+  Running: Insert
+  Warming up...
+  Running: Search (hit)
+  Warming up...
+  Running: Search (miss)
+  Warming up...
+
+=== Core Operations ===
+Test Name                Mean Ops/sec   Median      CV%     Range
+--------------------------------------------------------------------------------
+Insert                   937,477        970,120     16.2    588408-1128032
+Search (hit)             4,071,917      4,422,822   24.0    2221729-5154639
+Search (miss)            4,594,584      4,960,317   14.4    3362475-5257624
+  Running: Individual Insert 100
+  Warming up...
+  Running: Batch Insert 100
+  Warming up...
+  Running: Individual Search 100
+  Warming up...
+  Running: Batch Search 100
+  Warming up...
+
+=== Batch vs Individual ===
+Test Name                Mean Ops/sec   Median      CV%     Range
+--------------------------------------------------------------------------------
+Individual Insert 100    22,347         23,815      15.1    16008-25661
+Batch Insert 100         24,636         26,212      22.3    9318-30075
+Individual Search 100    35,349         37,665      9.9     29044-38895
+Batch Search 100         26,720         28,225      8.5     22492-28918
+  Running: CPU Stability
+  Warming up...
+
+=== System Stability Check ===
+Test Name                Mean Ops/sec   Median      CV%     Range
+--------------------------------------------------------------------------------
+CPU Stability            527,284        532,765     2.5     476417-532765
+
+=== Variance Analysis ===
+CV% < 5%:  Excellent stability
+CV% 5-10%: Good stability
+CV% 10-20%: Moderate variance
+CV% > 20%: High variance (system load/thermal throttling)
+
+High Variance Detected:
+  - Insert: 16.2% CV
+  - Search (hit): 24.0% CV
+  - Individual Insert 100: 15.1% CV
+  - Batch Insert 100: 22.3% CV
+
+Recommendations:
+  1. Close unnecessary applications
+  2. Ensure laptop is plugged in (not on battery)
+  3. Set Windows power plan to 'High Performance'
+  4. Run: node --expose-gc benchmark/stable-benchmark.ts
+  5. Let laptop cool down if warm

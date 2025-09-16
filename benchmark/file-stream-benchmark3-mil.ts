@@ -6,7 +6,7 @@ console.log("==============================");
 
 const trie = new SeaDix();
 const filePath = "./words.txt";
-const bufferSize = 16 * 1024 * 1024; // 16MB buffer
+const bufferSize = 8 * 1024 * 1024; // 16MB buffer
 
 // Start timing
 const start = performance.now();
