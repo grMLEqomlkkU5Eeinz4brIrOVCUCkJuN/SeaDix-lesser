@@ -41,6 +41,7 @@ for (const key of Object.keys(memStats) as Array<keyof typeof memStats>) {
 	formattedMemStats[key] = typeof value === "number" ? formatBytes(value) : value;
 }
 console.log("Memory Stats:", JSON.stringify(formattedMemStats, null, 2));
+console.log(`Node count: ${memStats.nodeCount}`);
 // console.log("Word Metrics:", JSON.stringify(trie.getWordMetrics(), null, 2));
 // console.log("Pattern Search ('*a*'):", JSON.stringify(trie.patternSearch("*a*")));
 

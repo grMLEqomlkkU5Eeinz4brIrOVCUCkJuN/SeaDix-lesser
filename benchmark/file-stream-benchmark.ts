@@ -44,6 +44,9 @@ console.log("Memory Stats:", JSON.stringify(formattedMemStats, null, 2));
 // console.log("Word Metrics:", JSON.stringify(trie.getWordMetrics(), null, 2));
 // console.log("Pattern Search ('*a*'):", JSON.stringify(trie.patternSearch("*a*")));
 
+// Output number of nodes (raw integer, not formatted)
+console.log(`Node count: ${memStats.nodeCount}`);
+
 
 // Export trie as JSON to file with benchmark
 import { writeFileSync } from "fs";

@@ -490,7 +490,7 @@ size_t RadixTrie::calculate_memory_recursive(const Node *node) const {
 	if (!node)
 		return 0;
 
-	size_t memory = sizeof(Node) + node->key.capacity();
+	size_t memory = sizeof(Node) + node->key.size();
 
 	for (const auto &[ch, child] : node->children) {
 		memory += calculate_memory_recursive(child.get());
@@ -520,7 +520,7 @@ RadixTrie::MemoryStats RadixTrie::get_memory_stats() const {
 		if (!node)
 			return;
 		node_count++;
-		string_bytes += node->key.capacity();
+		string_bytes += node->key.size();
 		for (const auto &[ch, child] : node->children) {
 			count_nodes(child.get());
 		}
