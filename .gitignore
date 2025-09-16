@@ -4,3 +4,7 @@ build
 dist
 test_performance*
 enable1.txt
+trie-export.json
+words.txt
+test-radixtrie-benchmark.js
+radixtrie-export.json

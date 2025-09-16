@@ -16,7 +16,7 @@ class SeaDix : public Napi::ObjectWrap<SeaDix> {
 	// Methods exposed to JavaScript
 	Napi::Value Insert(const Napi::CallbackInfo &info);
 	Napi::Value InsertBatch(const Napi::CallbackInfo &info);
-	Napi::Value InsertFromFile(const Napi::CallbackInfo &info); // New method
+	Napi::Value InsertFromFile(const Napi::CallbackInfo &info);
 	Napi::Value Search(const Napi::CallbackInfo &info);
 	Napi::Value SearchBatch(const Napi::CallbackInfo &info);
 	Napi::Value StartsWith(const Napi::CallbackInfo &info);
@@ -26,4 +26,10 @@ class SeaDix : public Napi::ObjectWrap<SeaDix> {
 	Napi::Value Empty(const Napi::CallbackInfo &info);
 	Napi::Value Size(const Napi::CallbackInfo &info);
 	Napi::Value Clear(const Napi::CallbackInfo &info);
+
+	// analytics methods
+	Napi::Value GetHeightStats(const Napi::CallbackInfo &info);
+	Napi::Value GetMemoryStats(const Napi::CallbackInfo &info);
+	Napi::Value GetWordMetrics(const Napi::CallbackInfo &info);
+	Napi::Value PatternSearch(const Napi::CallbackInfo &info);
 };

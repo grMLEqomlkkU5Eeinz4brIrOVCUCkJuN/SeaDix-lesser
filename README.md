@@ -6,7 +6,7 @@ You might find a lot of messy code, partly because this is really just for me to
 
 # NOTICE
 
-If you are conducting benchmarks, you should make use of `stable-benchmarks.ts` this is because I notived a huge amount of variation in runs.
+If you are conducting benchmarks, you should make use of `stable-benchmarks.ts` this is because I notived a huge amount of variation in runs. Also if you want to convert json to trie or export trie to json (`trie.toJSON()`), make sure to use javascript to handle the json data instead, this is because having to convert JSON via N-API is costly. I might make proper export methods to a dedicated file in the future.
 
 ## What This Is
 
@@ -191,13 +191,6 @@ Each JavaScript function call to C++ requires:
 - **Search**: O(m) where m is the length of the word
 - **Prefix Search**: O(m + k) where m is prefix length and k is number of results
 - **Node Cleanup**: O(1) per node using parent pointer optimization
-
-### What I'm Trying to Figure Out
-
-- **Sorted Bulk Operations**: Words are sorted before bulk insertion to optimize tree structure
-- **Memory Efficient**: Uses radix compression to minimize memory usage
-- **Fast Cleanup**: O(1) node removal using parent pointers instead of O(n) traversal
-- **N-API Optimization**: Batch string creation and reduced JavaScript/C++ boundary crossings
 
 ## Benchmarking
 
