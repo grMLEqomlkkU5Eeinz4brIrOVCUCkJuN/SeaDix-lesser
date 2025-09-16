@@ -123,7 +123,6 @@ console.log(results); // [true, true, false]
 // Batch remove
 const removed = trie.removeBatch(['hello', 'world']);
 console.log(removed); // [true, true]
-```
 
 ### Individual Operations
 
