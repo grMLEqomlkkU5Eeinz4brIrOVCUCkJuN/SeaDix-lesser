@@ -6,9 +6,13 @@
 #include <numeric>
 #include <unordered_map>
 
-RadixTrie::RadixTrie() : arena_(1024 * 1024), root(std::make_unique<Node>()), word_count_(0), arena_size_(1024 * 1024) {}
+RadixTrie::RadixTrie()
+	: arena_(1024 * 1024), root(std::make_unique<Node>()), word_count_(0),
+	  arena_size_(1024 * 1024) {}
 
-RadixTrie::RadixTrie(size_t arena_size) : arena_(arena_size), root(std::make_unique<Node>()), word_count_(0), arena_size_(arena_size) {}
+RadixTrie::RadixTrie(size_t arena_size)
+	: arena_(arena_size), root(std::make_unique<Node>()), word_count_(0),
+	  arena_size_(arena_size) {}
 
 RadixTrie::ChildVec::iterator RadixTrie::find_child(Node *node, char c) {
 	auto &v = node->children;
@@ -203,8 +207,9 @@ void RadixTrie::insert(std::string_view word) {
 		if (it == current->children.end() || it->first != first_char) {
 			// No child with this first character, create new node
 			auto new_node = std::make_unique<Node>(
-				std::pmr::string(word.data() + pos, word.length() - pos, &arena_), current,
-				first_char);
+				std::pmr::string(word.data() + pos, word.length() - pos,
+								 &arena_),
+				current, first_char);
 			new_node->is_end = true;
 			current->children.insert(
 				it, std::make_pair(first_char, std::move(new_node)));
@@ -434,9 +439,7 @@ void RadixTrie::clear() {
 	word_count_ = 0; // Reset counter
 }
 
-size_t RadixTrie::getArenaSize() const noexcept {
-	return arena_size_;
-}
+size_t RadixTrie::getArenaSize() const noexcept { return arena_size_; }
 
 std::vector<std::string> RadixTrie::get_all_words() const {
 	std::vector<std::string> words;
@@ -448,8 +451,8 @@ void RadixTrie::split_node(Node *current, char first_char, size_t common_len,
 						   const std::pmr::string &child_key,
 						   std::string_view /* remaining */) {
 	// Create intermediate node with common prefix
-		auto intermediate =
-		std::make_unique<Node>(std::pmr::string(child_key.data(), common_len, &arena_));
+	auto intermediate = std::make_unique<Node>(
+		std::pmr::string(child_key.data(), common_len, &arena_));
 	// Set parent linkage for the intermediate node
 	intermediate->parent = current;
 	intermediate->parent_char = first_char;

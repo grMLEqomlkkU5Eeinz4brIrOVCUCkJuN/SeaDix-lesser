@@ -1,11 +1,11 @@
 #pragma once
 #include <functional>
 #include <memory>
+#include <memory_resource>
 #include <regex>
 #include <string>
 #include <string_view>
 #include <vector>
-#include <memory_resource>
 
 class RadixTrie {
   private:
@@ -39,7 +39,8 @@ class RadixTrie {
 								 std::vector<std::string> &result) const;
 	void cleanup_orphaned_nodes(std::string_view word);
 	void split_node(Node *current, char first_char, size_t common_len,
-					const std::pmr::string &child_key, std::string_view remaining);
+					const std::pmr::string &child_key,
+					std::string_view remaining);
 
 	// New helper methods for analytics
 	void calculate_heights_recursive(const Node *node, int current_depth,
@@ -95,10 +96,10 @@ class RadixTrie {
 	bool empty() const noexcept;
 	size_t size() const noexcept;
 	void clear();
-	
+
 	// Arena management
 	size_t getArenaSize() const noexcept;
-	
+
 	// Get all words (for arena resizing)
 	std::vector<std::string> get_all_words() const;
 

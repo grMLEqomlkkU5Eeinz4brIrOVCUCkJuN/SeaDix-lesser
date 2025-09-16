@@ -439,32 +439,32 @@ Napi::Value SeaDix::GetArenaSize(const Napi::CallbackInfo &info) {
 // Set arena size (requires recreating the trie)
 Napi::Value SeaDix::SetArenaSize(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
-	
+
 	if (info.Length() < 1 || !info[0].IsNumber()) {
 		Napi::TypeError::New(env, "Arena size must be a number")
 			.ThrowAsJavaScriptException();
 		return env.Undefined();
 	}
-	
+
 	size_t new_arena_size = info[0].As<Napi::Number>().Uint32Value();
-	
+
 	if (new_arena_size == 0) {
 		Napi::TypeError::New(env, "Arena size must be greater than 0")
 			.ThrowAsJavaScriptException();
 		return env.Undefined();
 	}
-	
+
 	// Store current data
 	std::vector<std::string> current_words = trie_->get_all_words();
-	
+
 	// Create new trie with new arena size
 	trie_ = std::make_unique<RadixTrie>(new_arena_size);
-	
+
 	// Re-insert all words
-	for (const auto& word : current_words) {
+	for (const auto &word : current_words) {
 		trie_->insert(word);
 	}
-	
+
 	return Napi::Boolean::New(env, true);
 }
 

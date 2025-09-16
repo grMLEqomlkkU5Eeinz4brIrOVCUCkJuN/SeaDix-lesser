@@ -32,7 +32,7 @@ class SeaDix : public Napi::ObjectWrap<SeaDix> {
 	Napi::Value GetMemoryStats(const Napi::CallbackInfo &info);
 	Napi::Value GetWordMetrics(const Napi::CallbackInfo &info);
 	Napi::Value PatternSearch(const Napi::CallbackInfo &info);
-	
+
 	// arena management
 	Napi::Value GetArenaSize(const Napi::CallbackInfo &info);
 	Napi::Value SetArenaSize(const Napi::CallbackInfo &info);

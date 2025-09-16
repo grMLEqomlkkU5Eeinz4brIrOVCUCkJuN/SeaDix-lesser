@@ -10,7 +10,7 @@ interface BenchmarkResult {
 
 function benchmarkArenaSize(arenaSize: number, wordCount: number = 10000): BenchmarkResult {
 	const trie = new SeaDix(arenaSize);
-	const words = Array.from({ length: wordCount }, (_, i) => `word${i.toString().padStart(5, '0')}`);
+	const words = Array.from({ length: wordCount }, (_, i) => `word${i.toString().padStart(5, "0")}`);
 
 	// Benchmark insertions
 	const insertStart = process.hrtime.bigint();
@@ -121,9 +121,9 @@ function runArenaBenchmark() {
 		const memoryDiff = ((largeArena.memoryUsage - smallArena.memoryUsage) / (1024 * 1024)).toFixed(2);
 		const insertDiff = (largeArena.insertTime - smallArena.insertTime).toFixed(2);
 		
-		console.log(`• Small datasets (< 1K words): Use 64KB arena`);
-		console.log(`• Medium datasets (1K-10K words): Use 256KB-1MB arena`);
-		console.log(`• Large datasets (> 10K words): Use 1MB+ arena`);
+		console.log("• Small datasets (< 1K words): Use 64KB arena");
+		console.log("• Medium datasets (1K-10K words): Use 256KB-1MB arena");
+		console.log("• Large datasets (> 10K words): Use 1MB+ arena");
 		console.log(`• Memory difference: ${memoryDiff}MB between smallest and largest`);
 		console.log(`• Performance difference: ${insertDiff}ms insert time`);
 	}

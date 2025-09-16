@@ -110,7 +110,7 @@ export class SeaDix {
    */
 	constructor(optionsOrArenaSize: SeaDixOptions | number = {}) {
 		// Check if first parameter is a number (arena size) or options object
-		if (typeof optionsOrArenaSize === 'number') {
+		if (typeof optionsOrArenaSize === "number") {
 			this.nativeTrie = new native.SeaDix(optionsOrArenaSize);
 			this.ignoreCase = false;
 		} else {
