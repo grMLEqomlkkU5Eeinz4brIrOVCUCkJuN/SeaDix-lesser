@@ -14,7 +14,7 @@ class RadixTrie {
 		bool is_end = false;
 		Node *parent = nullptr;
 		char parent_char = '\0';
-		std::unordered_map<char, std::unique_ptr<Node>> children;
+		std::vector<std::pair<char, std::unique_ptr<Node>>> children;
 
 		Node() = default;
 		explicit Node(std::string k) : key(std::move(k)) {}
@@ -24,6 +24,10 @@ class RadixTrie {
 
 	std::unique_ptr<Node> root;
 	size_t word_count_; // Add this line to track word count
+
+	using ChildVec = std::vector<std::pair<char, std::unique_ptr<Node>>>;
+	static ChildVec::iterator find_child(Node *node, char c);
+	static ChildVec::const_iterator find_child(const Node *node, char c);
 
 	// Helper methods
 	size_t common_prefix_length(std::string_view s1,

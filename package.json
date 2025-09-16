@@ -20,6 +20,7 @@
     "benchmark": "ts-node benchmark/simple-benchmark.ts",
     "benchmark:file": "ts-node benchmark/file-stream-benchmark.ts",
     "benchmark:file3": "ts-node benchmark/file-stream-benchmark3-mil.ts",
+    "benchmark:filet": "ts-node benchmark/file-stream-benchmarkt.ts",
     "benchmark:full": "ts-node benchmark/benchmark.ts",
     "benchmark:stable": "ts-node benchmark/stable-benchmarks.ts",
     "format:cc": "find . -name \"*.cc\" -exec clang-format -i {} \\;",

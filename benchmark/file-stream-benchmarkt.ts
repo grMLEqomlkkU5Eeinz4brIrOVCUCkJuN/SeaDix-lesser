@@ -5,8 +5,8 @@ console.log("SeaDix File-Streaming Benchmark");
 console.log("==============================");
 
 const trie = new SeaDix();
-const filePath = "./words.txt";
-const bufferSize = 16 * 1024 * 1024; // 16MB buffer
+const filePath = "./terms.txt";
+const bufferSize = 32 * 1024 * 1024; // 1MB buffer
 
 // Start timing
 const start = performance.now();
