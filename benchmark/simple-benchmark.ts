@@ -129,6 +129,14 @@ const isEmpty = trie.isEmpty();
 const allWords = trie.getWordsWithPrefix("");
 const stats = trie.getStats();
 
+// Analytics methods output
+console.log("\n10. Analytics Methods Output");
+console.log("----------------------------");
+console.log("Height Stats:", JSON.stringify(trie.getHeightStats(), null, 2));
+console.log("Memory Stats:", JSON.stringify(trie.getMemoryStats(), null, 2));
+console.log("Word Metrics:", JSON.stringify(trie.getWordMetrics(), null, 2));
+console.log("Pattern Search ('*a*'):", trie.patternSearch("*a*"));
+
 // Memory usage (trie-specific)
 console.log("\n8. Trie Memory Usage");
 console.log("--------------------");

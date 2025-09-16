@@ -259,6 +259,43 @@ describe("SeaDix", () => {
 			expect(trie.isEmpty()).toBe(true);
 		});
 
+		test("should get height statistics", () => {
+			const stats = trie.getHeightStats();
+			expect(stats.minHeight).toBeGreaterThanOrEqual(1);
+			expect(stats.maxHeight).toBeGreaterThanOrEqual(stats.minHeight);
+			expect(stats.averageHeight).toBeGreaterThanOrEqual(stats.minHeight);
+			expect(Array.isArray(stats.allHeights)).toBe(true);
+		});
+
+		test("should get memory statistics", () => {
+			const mem = trie.getMemoryStats();
+			expect(mem.totalBytes).toBeGreaterThan(0);
+			expect(mem.nodeCount).toBeGreaterThan(0);
+			expect(mem.stringBytes).toBeGreaterThanOrEqual(0);
+			expect(mem.bytesPerWord).toBeGreaterThan(0);
+		});
+
+		test("should get word metrics", () => {
+			const metrics = trie.getWordMetrics();
+			expect(metrics.minLength).toBeGreaterThan(0);
+			expect(metrics.maxLength).toBeGreaterThanOrEqual(metrics.minLength);
+			expect(metrics.averageLength).toBeGreaterThanOrEqual(metrics.minLength);
+			expect(Array.isArray(metrics.lengthDistribution)).toBe(true);
+			expect(metrics.totalCharacters).toBeGreaterThan(0);
+		});
+
+		test("should find words with patternSearch", () => {
+			trie.insert("helpful");
+			trie.insert("helmet");
+			trie.insert("help");
+			const results = trie.patternSearch("he*");
+			expect(results).toEqual(expect.arrayContaining(["hello", "help", "helpful", "helmet"]));
+			const results2 = trie.patternSearch("h?l*");
+			expect(results2).toEqual(expect.arrayContaining(["hello", "help", "helmet"]));
+			const results3 = trie.patternSearch("*world*");
+			expect(results3).toContain("world");
+		});
+
 		test("should get all words", () => {
 			const allWords = trie.getWordsWithPrefix("");
 			expect(allWords).toHaveLength(3);

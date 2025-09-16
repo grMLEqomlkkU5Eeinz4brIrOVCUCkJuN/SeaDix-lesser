@@ -118,6 +118,17 @@ function runStableBenchmarks(): void {
 	console.log("CV% = Coefficient of Variation (lower is more stable)");
 
 	// Core operations benchmark
+
+	// Analytics methods stable benchmarks
+	const trie = new SeaDix();
+	["hello", "world", "test", "helmet", "helpful", "apple", "banana", "carrot"].forEach(word => trie.insert(word));
+
+	const analyticsBench = new StableBenchmark("Analytics Methods");
+	analyticsBench.timeStable("getHeightStats", () => trie.getHeightStats(), 10, 10, 100);
+	analyticsBench.timeStable("getMemoryStats", () => trie.getMemoryStats(), 10, 10, 100);
+	analyticsBench.timeStable("getWordMetrics", () => trie.getWordMetrics(), 10, 10, 100);
+	analyticsBench.timeStable("patternSearch('*a*')", () => trie.patternSearch("*a*"), 10, 10, 100);
+	analyticsBench.printResults();
 	const coreBench = new StableBenchmark("Core Operations");
 
 	// Single insert

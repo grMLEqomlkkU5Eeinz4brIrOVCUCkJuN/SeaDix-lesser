@@ -1,5 +1,7 @@
 #pragma once
+#include <functional>
 #include <memory>
+#include <regex>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -33,7 +35,48 @@ class RadixTrie {
 	void split_node(Node *current, char first_char, size_t common_len,
 					const std::string &child_key, std::string_view remaining);
 
+	// New helper methods for analytics
+	void calculate_heights_recursive(const Node *node, int current_depth,
+									 std::vector<int> &heights) const;
+	size_t calculate_memory_recursive(const Node *node) const;
+	void collect_word_lengths_recursive(const Node *node, int current_length,
+										std::vector<int> &lengths) const;
+	void pattern_match_recursive(const Node *node,
+								 const std::string &current_word,
+								 const std::string &pattern,
+								 std::vector<std::string> &results) const;
+	bool matches_pattern(const std::string &word,
+						 const std::string &pattern) const;
+
   public:
+	// Height statistics structure
+	struct HeightStats {
+		int min_height;
+		int max_height;
+		double average_height;
+		int mode_height;
+		std::vector<int> all_heights;
+	};
+
+	// Memory usage structure
+	struct MemoryStats {
+		size_t total_bytes;
+		size_t node_count;
+		size_t string_bytes;
+		size_t overhead_bytes;
+		double bytes_per_word;
+	};
+
+	// Word metrics structure
+	struct WordMetrics {
+		int min_length;
+		int max_length;
+		double average_length;
+		int mode_length;
+		std::vector<int> length_distribution;
+		size_t total_characters;
+	};
+
 	RadixTrie();
 
 	void insert(std::string_view word);
@@ -48,4 +91,10 @@ class RadixTrie {
 	// Updated method with configurable buffer size
 	size_t bulk_insert_from_file(const std::string &path,
 								 size_t buffer_size = 1024 * 1024);
+
+	// analytics methods
+	HeightStats get_height_stats() const;
+	MemoryStats get_memory_stats() const;
+	WordMetrics get_word_metrics() const;
+	std::vector<std::string> pattern_search(const std::string &pattern) const;
 };

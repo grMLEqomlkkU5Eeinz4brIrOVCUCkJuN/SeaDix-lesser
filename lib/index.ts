@@ -22,6 +22,31 @@ interface NativeSeaDix {
   empty(): boolean;
   size(): number;
   clear(): void;
+
+	// Analytics methods
+	getHeightStats(): {
+		minHeight: number;
+		maxHeight: number;
+		averageHeight: number;
+		modeHeight: number;
+		allHeights: number[];
+	};
+	getMemoryStats(): {
+		totalBytes: number;
+		nodeCount: number;
+		stringBytes: number;
+		overheadBytes: number;
+		bytesPerWord: number;
+	};
+	getWordMetrics(): {
+		minLength: number;
+		maxLength: number;
+		averageLength: number;
+		modeLength: number;
+		lengthDistribution: number[];
+		totalCharacters: number;
+	};
+	patternSearch(pattern: string): string[];
 }
 
 /**
@@ -89,6 +114,61 @@ export class SeaDix {
 				this.insert(word);
 			}
 		}
+	}
+
+	/**
+	 * Get height statistics for the trie
+	 * @returns Object with minHeight, maxHeight, averageHeight, modeHeight, allHeights
+	 */
+	getHeightStats(): {
+		minHeight: number;
+		maxHeight: number;
+		averageHeight: number;
+		modeHeight: number;
+		allHeights: number[];
+		} {
+		return this.nativeTrie.getHeightStats();
+	}
+
+	/**
+	 * Get memory usage statistics for the trie
+	 * @returns Object with totalBytes, nodeCount, stringBytes, overheadBytes, bytesPerWord
+	 */
+	getMemoryStats(): {
+		totalBytes: number;
+		nodeCount: number;
+		stringBytes: number;
+		overheadBytes: number;
+		bytesPerWord: number;
+		} {
+		return this.nativeTrie.getMemoryStats();
+	}
+
+	/**
+	 * Get word metrics for the trie
+	 * @returns Object with minLength, maxLength, averageLength, modeLength, lengthDistribution, totalCharacters
+	 */
+	getWordMetrics(): {
+		minLength: number;
+		maxLength: number;
+		averageLength: number;
+		modeLength: number;
+		lengthDistribution: number[];
+		totalCharacters: number;
+		} {
+		return this.nativeTrie.getWordMetrics();
+	}
+
+	/**
+	 * Search for words matching a pattern (supports * and ? wildcards)
+	 * @param pattern - Pattern string with wildcards
+	 * @returns Array of matching words
+	 */
+	patternSearch(pattern: string): string[] {
+		if (typeof pattern !== "string") {
+			throw new TypeError("Pattern must be a string");
+		}
+		return this.nativeTrie.patternSearch(pattern);
 	}
 
 	/**

@@ -16,8 +16,7 @@ Napi::Object SeaDix::Init(Napi::Env env, Napi::Object exports) {
 		env, "SeaDix",
 		{InstanceMethod("insert", &SeaDix::Insert),
 		 InstanceMethod("insertBatch", &SeaDix::InsertBatch),
-		 InstanceMethod("insertFromFile",
-						&SeaDix::InsertFromFile), // New method
+		 InstanceMethod("insertFromFile", &SeaDix::InsertFromFile),
 		 InstanceMethod("search", &SeaDix::Search),
 		 InstanceMethod("searchBatch", &SeaDix::SearchBatch),
 		 InstanceMethod("startsWith", &SeaDix::StartsWith),
@@ -26,7 +25,12 @@ Napi::Object SeaDix::Init(Napi::Env env, Napi::Object exports) {
 		 InstanceMethod("removeBatch", &SeaDix::RemoveBatch),
 		 InstanceMethod("empty", &SeaDix::Empty),
 		 InstanceMethod("size", &SeaDix::Size),
-		 InstanceMethod("clear", &SeaDix::Clear)});
+		 InstanceMethod("clear", &SeaDix::Clear),
+		 // New analytics methods
+		 InstanceMethod("getHeightStats", &SeaDix::GetHeightStats),
+		 InstanceMethod("getMemoryStats", &SeaDix::GetMemoryStats),
+		 InstanceMethod("getWordMetrics", &SeaDix::GetWordMetrics),
+		 InstanceMethod("patternSearch", &SeaDix::PatternSearch)});
 
 	constructor = Napi::Persistent(func);
 	constructor.SuppressDestruct();
@@ -241,12 +245,7 @@ Napi::Value SeaDix::RemoveBatch(const Napi::CallbackInfo &info) {
 	return results;
 }
 
-// Module initialization
-Napi::Object Init(Napi::Env env, Napi::Object exports) {
-	return SeaDix::Init(env, exports);
-}
-
-// New InsertFromFile method
+// InsertFromFile method
 Napi::Value SeaDix::InsertFromFile(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
 
@@ -292,6 +291,138 @@ Napi::Value SeaDix::InsertFromFile(const Napi::CallbackInfo &info) {
 			.ThrowAsJavaScriptException();
 		return env.Undefined();
 	}
+}
+
+// Get height statistics
+Napi::Value SeaDix::GetHeightStats(const Napi::CallbackInfo &info) {
+	Napi::Env env = info.Env();
+
+	try {
+		auto stats = trie_.get_height_stats();
+
+		Napi::Object result = Napi::Object::New(env);
+		result.Set("minHeight", Napi::Number::New(env, stats.min_height));
+		result.Set("maxHeight", Napi::Number::New(env, stats.max_height));
+		result.Set("averageHeight",
+				   Napi::Number::New(env, stats.average_height));
+		result.Set("modeHeight", Napi::Number::New(env, stats.mode_height));
+
+		// Convert heights vector to JS array
+		Napi::Array heights_array =
+			Napi::Array::New(env, stats.all_heights.size());
+		for (size_t i = 0; i < stats.all_heights.size(); ++i) {
+			heights_array[i] = Napi::Number::New(env, stats.all_heights[i]);
+		}
+		result.Set("allHeights", heights_array);
+
+		return result;
+	} catch (const std::exception &e) {
+		Napi::Error::New(env,
+						 std::string("Failed to get height stats: ") + e.what())
+			.ThrowAsJavaScriptException();
+		return env.Undefined();
+	}
+}
+
+// Get memory statistics
+Napi::Value SeaDix::GetMemoryStats(const Napi::CallbackInfo &info) {
+	Napi::Env env = info.Env();
+
+	try {
+		auto stats = trie_.get_memory_stats();
+
+		Napi::Object result = Napi::Object::New(env);
+		result.Set(
+			"totalBytes",
+			Napi::Number::New(env, static_cast<double>(stats.total_bytes)));
+		result.Set("nodeCount", Napi::Number::New(env, static_cast<double>(
+														   stats.node_count)));
+		result.Set(
+			"stringBytes",
+			Napi::Number::New(env, static_cast<double>(stats.string_bytes)));
+		result.Set(
+			"overheadBytes",
+			Napi::Number::New(env, static_cast<double>(stats.overhead_bytes)));
+		result.Set("bytesPerWord",
+				   Napi::Number::New(env, stats.bytes_per_word));
+
+		return result;
+	} catch (const std::exception &e) {
+		Napi::Error::New(env,
+						 std::string("Failed to get memory stats: ") + e.what())
+			.ThrowAsJavaScriptException();
+		return env.Undefined();
+	}
+}
+
+// Get word metrics
+Napi::Value SeaDix::GetWordMetrics(const Napi::CallbackInfo &info) {
+	Napi::Env env = info.Env();
+
+	try {
+		auto metrics = trie_.get_word_metrics();
+
+		Napi::Object result = Napi::Object::New(env);
+		result.Set("minLength", Napi::Number::New(env, metrics.min_length));
+		result.Set("maxLength", Napi::Number::New(env, metrics.max_length));
+		result.Set("averageLength",
+				   Napi::Number::New(env, metrics.average_length));
+		result.Set("modeLength", Napi::Number::New(env, metrics.mode_length));
+		result.Set("totalCharacters",
+				   Napi::Number::New(
+					   env, static_cast<double>(metrics.total_characters)));
+
+		// Convert length distribution to JS array
+		Napi::Array dist_array =
+			Napi::Array::New(env, metrics.length_distribution.size());
+		for (size_t i = 0; i < metrics.length_distribution.size(); ++i) {
+			dist_array[i] =
+				Napi::Number::New(env, metrics.length_distribution[i]);
+		}
+		result.Set("lengthDistribution", dist_array);
+
+		return result;
+	} catch (const std::exception &e) {
+		Napi::Error::New(env,
+						 std::string("Failed to get word metrics: ") + e.what())
+			.ThrowAsJavaScriptException();
+		return env.Undefined();
+	}
+}
+
+// Pattern search with wildcards
+Napi::Value SeaDix::PatternSearch(const Napi::CallbackInfo &info) {
+	Napi::Env env = info.Env();
+
+	if (info.Length() < 1 || !info[0].IsString()) {
+		Napi::TypeError::New(env, "Pattern string argument expected")
+			.ThrowAsJavaScriptException();
+		return env.Undefined();
+	}
+
+	try {
+		std::string pattern = info[0].As<Napi::String>().Utf8Value();
+		std::vector<std::string> matches = trie_.pattern_search(pattern);
+
+		// Convert results to JS array
+		Napi::Array result = Napi::Array::New(env, matches.size());
+		for (size_t i = 0; i < matches.size(); ++i) {
+			result[i] =
+				Napi::String::New(env, matches[i].c_str(), matches[i].length());
+		}
+
+		return result;
+	} catch (const std::exception &e) {
+		Napi::Error::New(
+			env, std::string("Failed to perform pattern search: ") + e.what())
+			.ThrowAsJavaScriptException();
+		return env.Undefined();
+	}
+}
+
+// Module initialization
+Napi::Object Init(Napi::Env env, Napi::Object exports) {
+	return SeaDix::Init(env, exports);
 }
 
 // Register the module
