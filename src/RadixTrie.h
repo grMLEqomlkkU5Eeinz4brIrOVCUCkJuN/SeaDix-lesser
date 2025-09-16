@@ -1,11 +1,11 @@
 #pragma once
+#include <functional>
 #include <memory>
+#include <regex>
 #include <string>
 #include <string_view>
 #include <unordered_map>
 #include <vector>
-#include <regex>
-#include <functional>
 
 class RadixTrie {
   private:
@@ -36,14 +36,17 @@ class RadixTrie {
 					const std::string &child_key, std::string_view remaining);
 
 	// New helper methods for analytics
-	void calculate_heights_recursive(const Node* node, int current_depth,
-									std::vector<int>& heights) const;
-	size_t calculate_memory_recursive(const Node* node) const;
-	void collect_word_lengths_recursive(const Node* node, int current_length,
-										std::vector<int>& lengths) const;
-	void pattern_match_recursive(const Node* node, const std::string& current_word,
-								const std::string& pattern, std::vector<std::string>& results) const;
-	bool matches_pattern(const std::string& word, const std::string& pattern) const;
+	void calculate_heights_recursive(const Node *node, int current_depth,
+									 std::vector<int> &heights) const;
+	size_t calculate_memory_recursive(const Node *node) const;
+	void collect_word_lengths_recursive(const Node *node, int current_length,
+										std::vector<int> &lengths) const;
+	void pattern_match_recursive(const Node *node,
+								 const std::string &current_word,
+								 const std::string &pattern,
+								 std::vector<std::string> &results) const;
+	bool matches_pattern(const std::string &word,
+						 const std::string &pattern) const;
 
   public:
 	// Height statistics structure
@@ -93,5 +96,5 @@ class RadixTrie {
 	HeightStats get_height_stats() const;
 	MemoryStats get_memory_stats() const;
 	WordMetrics get_word_metrics() const;
-	std::vector<std::string> pattern_search(const std::string& pattern) const;
+	std::vector<std::string> pattern_search(const std::string &pattern) const;
 };

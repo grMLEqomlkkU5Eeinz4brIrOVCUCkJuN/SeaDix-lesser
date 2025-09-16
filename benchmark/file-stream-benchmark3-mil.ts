@@ -60,5 +60,5 @@ const importStart = performance.now();
 const importedJson = JSON.parse(require("fs").readFileSync(exportPath, "utf8"));
 const importedTrie = SeaDix.fromJSON(importedJson);
 const importEnd = performance.now();
-console.log(`Trie imported from JSON.`);
+console.log("Trie imported from JSON.");
 console.log(`Import from JSON time: ${(importEnd - importStart).toFixed(2)} ms`);

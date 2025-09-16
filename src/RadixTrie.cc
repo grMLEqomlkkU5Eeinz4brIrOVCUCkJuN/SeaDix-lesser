@@ -1,9 +1,9 @@
 #include "RadixTrie.h"
 #include <algorithm>
-#include <fstream>
-#include <unordered_map>
-#include <numeric>
 #include <cmath>
+#include <fstream>
+#include <numeric>
+#include <unordered_map>
 
 RadixTrie::RadixTrie() : root(std::make_unique<Node>()), word_count_(0) {}
 
@@ -431,15 +431,16 @@ void RadixTrie::split_node(Node *current, char first_char, size_t common_len,
 }
 
 // Helper method to calculate heights recursively
-void RadixTrie::calculate_heights_recursive(const Node* node, int current_depth,
-											std::vector<int>& heights) const {
-	if (!node) return;
+void RadixTrie::calculate_heights_recursive(const Node *node, int current_depth,
+											std::vector<int> &heights) const {
+	if (!node)
+		return;
 
 	if (node->is_end) {
 		heights.push_back(current_depth);
 	}
 
-	for (const auto& [ch, child] : node->children) {
+	for (const auto &[ch, child] : node->children) {
 		calculate_heights_recursive(child.get(), current_depth + 1, heights);
 	}
 }
@@ -474,7 +475,7 @@ RadixTrie::HeightStats RadixTrie::get_height_stats() const {
 	}
 
 	int max_count = 0;
-	for (const auto& [height, count] : frequency) {
+	for (const auto &[height, count] : frequency) {
 		if (count > max_count) {
 			max_count = count;
 			stats.mode_height = height;
@@ -485,12 +486,13 @@ RadixTrie::HeightStats RadixTrie::get_height_stats() const {
 }
 
 // Helper method to calculate memory usage recursively
-size_t RadixTrie::calculate_memory_recursive(const Node* node) const {
-	if (!node) return 0;
+size_t RadixTrie::calculate_memory_recursive(const Node *node) const {
+	if (!node)
+		return 0;
 
 	size_t memory = sizeof(Node) + node->key.capacity();
 
-	for (const auto& [ch, child] : node->children) {
+	for (const auto &[ch, child] : node->children) {
 		memory += calculate_memory_recursive(child.get());
 	}
 
@@ -514,11 +516,12 @@ RadixTrie::MemoryStats RadixTrie::get_memory_stats() const {
 	size_t node_count = 0;
 	size_t string_bytes = 0;
 
-	std::function<void(const Node*)> count_nodes = [&](const Node* node) {
-		if (!node) return;
+	std::function<void(const Node *)> count_nodes = [&](const Node *node) {
+		if (!node)
+			return;
 		node_count++;
 		string_bytes += node->key.capacity();
-		for (const auto& [ch, child] : node->children) {
+		for (const auto &[ch, child] : node->children) {
 			count_nodes(child.get());
 		}
 	};
@@ -527,7 +530,8 @@ RadixTrie::MemoryStats RadixTrie::get_memory_stats() const {
 
 	stats.node_count = node_count;
 	stats.string_bytes = string_bytes;
-	stats.total_bytes = sizeof(*this) + node_count * sizeof(Node) + string_bytes;
+	stats.total_bytes =
+		sizeof(*this) + node_count * sizeof(Node) + string_bytes;
 	stats.overhead_bytes = stats.total_bytes - string_bytes;
 	stats.bytes_per_word = static_cast<double>(stats.total_bytes) / word_count_;
 
@@ -535,9 +539,10 @@ RadixTrie::MemoryStats RadixTrie::get_memory_stats() const {
 }
 
 // Helper method to collect word lengths recursively
-void RadixTrie::collect_word_lengths_recursive(const Node* node, int current_length,
-											   std::vector<int>& lengths) const {
-	if (!node) return;
+void RadixTrie::collect_word_lengths_recursive(
+	const Node *node, int current_length, std::vector<int> &lengths) const {
+	if (!node)
+		return;
 
 	int new_length = current_length + static_cast<int>(node->key.length());
 
@@ -545,7 +550,7 @@ void RadixTrie::collect_word_lengths_recursive(const Node* node, int current_len
 		lengths.push_back(new_length);
 	}
 
-	for (const auto& [ch, child] : node->children) {
+	for (const auto &[ch, child] : node->children) {
 		collect_word_lengths_recursive(child.get(), new_length, lengths);
 	}
 }
@@ -581,7 +586,7 @@ RadixTrie::WordMetrics RadixTrie::get_word_metrics() const {
 	}
 
 	int max_count = 0;
-	for (const auto& [length, count] : frequency) {
+	for (const auto &[length, count] : frequency) {
 		if (count > max_count) {
 			max_count = count;
 			metrics.mode_length = length;
@@ -599,7 +604,8 @@ RadixTrie::WordMetrics RadixTrie::get_word_metrics() const {
 }
 
 // Pattern matching helper - checks if word matches pattern with wildcards
-bool RadixTrie::matches_pattern(const std::string& word, const std::string& pattern) const {
+bool RadixTrie::matches_pattern(const std::string &word,
+								const std::string &pattern) const {
 	size_t word_idx = 0, pattern_idx = 0;
 	size_t word_len = word.length(), pattern_len = pattern.length();
 
@@ -616,7 +622,8 @@ bool RadixTrie::matches_pattern(const std::string& word, const std::string& patt
 
 			// Try to match the rest of the pattern with remaining word
 			for (size_t i = word_idx; i <= word_len; ++i) {
-				if (matches_pattern(word.substr(i), pattern.substr(pattern_idx + 1))) {
+				if (matches_pattern(word.substr(i),
+									pattern.substr(pattern_idx + 1))) {
 					return true;
 				}
 			}
@@ -639,9 +646,11 @@ bool RadixTrie::matches_pattern(const std::string& word, const std::string& patt
 }
 
 // Recursive pattern matching
-void RadixTrie::pattern_match_recursive(const Node* node, const std::string& current_word,
-									   const std::string& pattern, std::vector<std::string>& results) const {
-	if (!node) return;
+void RadixTrie::pattern_match_recursive(
+	const Node *node, const std::string &current_word,
+	const std::string &pattern, std::vector<std::string> &results) const {
+	if (!node)
+		return;
 
 	std::string full_word = current_word + node->key;
 
@@ -649,13 +658,14 @@ void RadixTrie::pattern_match_recursive(const Node* node, const std::string& cur
 		results.push_back(full_word);
 	}
 
-	for (const auto& [ch, child] : node->children) {
+	for (const auto &[ch, child] : node->children) {
 		pattern_match_recursive(child.get(), full_word, pattern, results);
 	}
 }
 
 // Pattern search with wildcards (* and ?)
-std::vector<std::string> RadixTrie::pattern_search(const std::string& pattern) const {
+std::vector<std::string>
+RadixTrie::pattern_search(const std::string &pattern) const {
 	std::vector<std::string> results;
 
 	if (pattern.empty() || empty()) {

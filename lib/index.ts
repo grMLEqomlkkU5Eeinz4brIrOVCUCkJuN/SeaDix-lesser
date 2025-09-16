@@ -126,7 +126,7 @@ export class SeaDix {
 		averageHeight: number;
 		modeHeight: number;
 		allHeights: number[];
-	} {
+		} {
 		return this.nativeTrie.getHeightStats();
 	}
 
@@ -140,7 +140,7 @@ export class SeaDix {
 		stringBytes: number;
 		overheadBytes: number;
 		bytesPerWord: number;
-	} {
+		} {
 		return this.nativeTrie.getMemoryStats();
 	}
 
@@ -155,7 +155,7 @@ export class SeaDix {
 		modeLength: number;
 		lengthDistribution: number[];
 		totalCharacters: number;
-	} {
+		} {
 		return this.nativeTrie.getWordMetrics();
 	}
 
