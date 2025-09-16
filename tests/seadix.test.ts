@@ -438,6 +438,20 @@ describe("SeaDix", () => {
 			expect(trie.search("naïve")).toBe(true);
 			expect(trie.search("résumé")).toBe(true);
 		});
+
+		test("should distinguish cafe vs café (unicode)", () => {
+			trie.insert("café");
+
+			expect(trie.search("cafe")).toBe(false);
+			expect(trie.search("café")).toBe(true);
+
+		});
+
+		test("should distinguish cafe vs cafe\u0301 (combining acute)", () => {
+			trie.insert("cafe");
+			const cafeCombining = "cafe\u0301"; // 'e' + combining acute accent
+			expect(trie.search(cafeCombining)).toBe(false);
+		});
 	});
 
 	describe("Bulk Insertion Tests", () => {
