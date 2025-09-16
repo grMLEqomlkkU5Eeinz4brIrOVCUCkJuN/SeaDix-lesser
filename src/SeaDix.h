@@ -11,7 +11,7 @@ class SeaDix : public Napi::ObjectWrap<SeaDix> {
 
   private:
 	static Napi::FunctionReference constructor;
-	RadixTrie trie_;
+	std::unique_ptr<RadixTrie> trie_;
 
 	// Methods exposed to JavaScript
 	Napi::Value Insert(const Napi::CallbackInfo &info);
@@ -32,4 +32,8 @@ class SeaDix : public Napi::ObjectWrap<SeaDix> {
 	Napi::Value GetMemoryStats(const Napi::CallbackInfo &info);
 	Napi::Value GetWordMetrics(const Napi::CallbackInfo &info);
 	Napi::Value PatternSearch(const Napi::CallbackInfo &info);
+	
+	// arena management
+	Napi::Value GetArenaSize(const Napi::CallbackInfo &info);
+	Napi::Value SetArenaSize(const Napi::CallbackInfo &info);
 };

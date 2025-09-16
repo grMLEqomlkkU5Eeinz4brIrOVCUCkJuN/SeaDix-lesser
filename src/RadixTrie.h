@@ -4,28 +4,30 @@
 #include <regex>
 #include <string>
 #include <string_view>
-#include <unordered_map>
 #include <vector>
+#include <memory_resource>
 
 class RadixTrie {
   private:
 	struct Node {
-		std::string key;
+		std::pmr::string key;
 		bool is_end = false;
 		Node *parent = nullptr;
 		char parent_char = '\0';
-		std::vector<std::pair<char, std::unique_ptr<Node>>> children;
+		std::pmr::vector<std::pair<char, std::unique_ptr<Node>>> children;
 
 		Node() = default;
-		explicit Node(std::string k) : key(std::move(k)) {}
-		explicit Node(std::string k, Node *p, char pc)
+		explicit Node(std::pmr::string k) : key(std::move(k)) {}
+		explicit Node(std::pmr::string k, Node *p, char pc)
 			: key(std::move(k)), parent(p), parent_char(pc) {}
 	};
 
+	std::pmr::monotonic_buffer_resource arena_;
 	std::unique_ptr<Node> root;
-	size_t word_count_; // Add this line to track word count
+	size_t word_count_;
+	size_t arena_size_; // Store arena size for getArenaSize()
 
-	using ChildVec = std::vector<std::pair<char, std::unique_ptr<Node>>>;
+	using ChildVec = std::pmr::vector<std::pair<char, std::unique_ptr<Node>>>;
 	static ChildVec::iterator find_child(Node *node, char c);
 	static ChildVec::const_iterator find_child(const Node *node, char c);
 
@@ -37,7 +39,7 @@ class RadixTrie {
 								 std::vector<std::string> &result) const;
 	void cleanup_orphaned_nodes(std::string_view word);
 	void split_node(Node *current, char first_char, size_t common_len,
-					const std::string &child_key, std::string_view remaining);
+					const std::pmr::string &child_key, std::string_view remaining);
 
 	// New helper methods for analytics
 	void calculate_heights_recursive(const Node *node, int current_depth,
@@ -82,6 +84,8 @@ class RadixTrie {
 	};
 
 	RadixTrie();
+	explicit RadixTrie(size_t arena_size);
+	~RadixTrie() = default;
 
 	void insert(std::string_view word);
 	bool search(std::string_view word) const;
@@ -91,6 +95,12 @@ class RadixTrie {
 	bool empty() const noexcept;
 	size_t size() const noexcept;
 	void clear();
+	
+	// Arena management
+	size_t getArenaSize() const noexcept;
+	
+	// Get all words (for arena resizing)
+	std::vector<std::string> get_all_words() const;
 
 	// Updated method with configurable buffer size
 	size_t bulk_insert_from_file(const std::string &path,

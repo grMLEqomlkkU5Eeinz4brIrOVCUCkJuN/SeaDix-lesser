@@ -4,7 +4,7 @@ import { performance } from "perf_hooks";
 console.log("SeaDix File-Streaming Benchmark");
 console.log("==============================");
 
-const trie = new SeaDix();
+const trie = new SeaDix(2 * 1024 * 1024); // 2MB arena for large file operations
 const filePath = "./enable1.txt";
 const bufferSize = 1024 * 1024; // 1MB buffer
 

@@ -1,22 +1,42 @@
 # API Reference
 
+> **⚠️ Experimental Project**: This is a research/experimental project for exploring N-API performance and memory optimization techniques. It is **not recommended for production use**.
+
 ## Constructor
 
-### `new SeaDix(options?)`
+### `new SeaDix(optionsOrArenaSize?)`
 
 Creates a new Radix Trie instance.
 
 **Parameters:**
-- `options` (optional): Configuration object
-  - `words?: string[]` - Pre-populate with words
-  - `ignoreCase?: boolean` - Case-insensitive operations (default: false)
+- `optionsOrArenaSize` (optional): Either a configuration object or arena size in bytes
+  - **As number**: Arena size in bytes (experimental feature)
+  - **As object**: Configuration object
+    - `words?: string[]` - Pre-populate with words
+    - `ignoreCase?: boolean` - Case-insensitive operations (default: false)
 
-**Example:**
+**Examples:**
 ```javascript
+// Default constructor (1MB arena)
 const trie = new SeaDix();
+
+// With configuration options
 const trieWithWords = new SeaDix({ words: ['hello', 'world'] });
 const caseInsensitive = new SeaDix({ ignoreCase: true });
+
+// With custom arena size (experimental)
+const smallTrie = new SeaDix(64 * 1024); // 64KB arena
+const largeTrie = new SeaDix(4 * 1024 * 1024); // 4MB arena
 ```
+
+**Arena Size Guidelines:**
+- **Small datasets (< 1K words)**: 32-64KB
+- **Medium datasets (1K-10K words)**: 128KB-1MB  
+- **Large datasets (> 10K words)**: 1-4MB
+- **Search-heavy workloads**: 2-4MB
+- **Insert-heavy workloads**: 32-128KB
+
+See [Arena Sizing Guide](ARENA_SIZING.md) for detailed recommendations.
 
 ## Core Operations
 
@@ -164,6 +184,51 @@ console.log(`Loaded ${count} words`);
 // With custom buffer size
 const count2 = trie.insertFromFile('./words.txt', 2 * 1024 * 1024); // 2MB
 ```
+
+## Arena Management (Experimental)
+
+### `getArenaSize(): number`
+
+Gets the current arena size in bytes.
+
+**Returns:** Arena size in bytes
+
+**Example:**
+```javascript
+const arenaSize = trie.getArenaSize();
+console.log(`Current arena size: ${arenaSize} bytes`);
+```
+
+### `setArenaSize(size: number): boolean`
+
+Changes the arena size and recreates the trie with existing data.
+
+**Parameters:**
+- `size` - New arena size in bytes (must be > 0)
+
+**Returns:** `true` if successful, `false` otherwise
+
+**Throws:**
+- `TypeError` if size is not a number
+- `Error` if size is not greater than 0
+
+**Example:**
+```javascript
+// Start with small arena
+const trie = new SeaDix(64 * 1024);
+trie.insert("hello");
+trie.insert("world");
+
+// Change to larger arena (preserves data)
+const success = trie.setArenaSize(2 * 1024 * 1024);
+if (success) {
+    console.log("Arena size changed successfully");
+    // Data is preserved
+    console.log(trie.search("hello")); // true
+}
+```
+
+**Performance Note:** Changing arena size is expensive as it recreates the entire trie internally. Avoid frequent changes with large datasets.
 
 ## Analytics
 

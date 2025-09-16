@@ -7,7 +7,14 @@ Napi::FunctionReference SeaDix::constructor;
 // Constructor
 SeaDix::SeaDix(const Napi::CallbackInfo &info)
 	: Napi::ObjectWrap<SeaDix>(info) {
-	// Constructor can be empty since RadixTrie has a default constructor
+	// Check if arena size is provided as first argument
+	if (info.Length() > 0 && info[0].IsNumber()) {
+		size_t arena_size = info[0].As<Napi::Number>().Uint32Value();
+		trie_ = std::make_unique<RadixTrie>(arena_size);
+	} else {
+		// Use default arena size (1MB)
+		trie_ = std::make_unique<RadixTrie>();
+	}
 }
 
 // Static method to initialize and export the class
@@ -30,7 +37,10 @@ Napi::Object SeaDix::Init(Napi::Env env, Napi::Object exports) {
 		 InstanceMethod("getHeightStats", &SeaDix::GetHeightStats),
 		 InstanceMethod("getMemoryStats", &SeaDix::GetMemoryStats),
 		 InstanceMethod("getWordMetrics", &SeaDix::GetWordMetrics),
-		 InstanceMethod("patternSearch", &SeaDix::PatternSearch)});
+		 InstanceMethod("patternSearch", &SeaDix::PatternSearch),
+		 // Arena management methods
+		 InstanceMethod("getArenaSize", &SeaDix::GetArenaSize),
+		 InstanceMethod("setArenaSize", &SeaDix::SetArenaSize)});
 
 	constructor = Napi::Persistent(func);
 	constructor.SuppressDestruct();
@@ -52,7 +62,7 @@ Napi::Value SeaDix::Insert(const Napi::CallbackInfo &info) {
 	// Use string_view to avoid unnecessary string copy
 	std::string word = info[0].As<Napi::String>().Utf8Value();
 	std::string_view word_view(word);
-	trie_.insert(word_view);
+	trie_->insert(word_view);
 
 	return env.Undefined();
 }
@@ -70,7 +80,7 @@ Napi::Value SeaDix::Search(const Napi::CallbackInfo &info) {
 	// Use string_view to avoid unnecessary string copy
 	std::string word = info[0].As<Napi::String>().Utf8Value();
 	std::string_view word_view(word);
-	bool found = trie_.search(word_view);
+	bool found = trie_->search(word_view);
 
 	return Napi::Boolean::New(env, found);
 }
@@ -86,7 +96,7 @@ Napi::Value SeaDix::StartsWith(const Napi::CallbackInfo &info) {
 	}
 
 	std::string prefix = info[0].As<Napi::String>().Utf8Value();
-	bool hasPrefix = trie_.starts_with(prefix);
+	bool hasPrefix = trie_->starts_with(prefix);
 
 	return Napi::Boolean::New(env, hasPrefix);
 }
@@ -102,7 +112,7 @@ Napi::Value SeaDix::WordsWithPrefix(const Napi::CallbackInfo &info) {
 	}
 
 	std::string prefix = info[0].As<Napi::String>().Utf8Value();
-	std::vector<std::string> words = trie_.words_with_prefix(prefix);
+	std::vector<std::string> words = trie_->words_with_prefix(prefix);
 
 	// Pre-allocate array for batch string creation
 	Napi::Array result = Napi::Array::New(env, words.size());
@@ -124,7 +134,7 @@ Napi::Value SeaDix::Remove(const Napi::CallbackInfo &info) {
 	}
 
 	std::string word = info[0].As<Napi::String>().Utf8Value();
-	bool removed = trie_.remove(word);
+	bool removed = trie_->remove(word);
 
 	return Napi::Boolean::New(env, removed);
 }
@@ -132,14 +142,14 @@ Napi::Value SeaDix::Remove(const Napi::CallbackInfo &info) {
 // Empty method
 Napi::Value SeaDix::Empty(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
-	bool isEmpty = trie_.empty();
+	bool isEmpty = trie_->empty();
 	return Napi::Boolean::New(env, isEmpty);
 }
 
 // Size method
 Napi::Value SeaDix::Size(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
-	size_t size = trie_.size();
+	size_t size = trie_->size();
 	// Use safe conversion for large numbers
 	// Check if size can be safely converted to double (use a reasonable upper
 	// bound)
@@ -157,7 +167,7 @@ Napi::Value SeaDix::Size(const Napi::CallbackInfo &info) {
 // Clear method
 Napi::Value SeaDix::Clear(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
-	trie_.clear();
+	trie_->clear();
 	return env.Undefined();
 }
 
@@ -180,7 +190,7 @@ Napi::Value SeaDix::InsertBatch(const Napi::CallbackInfo &info) {
 			std::string word = words.Get(i).As<Napi::String>().Utf8Value();
 			if (!word.empty()) {
 				std::string_view word_view(word);
-				trie_.insert(word_view);
+				trie_->insert(word_view);
 				count++;
 			}
 		}
@@ -207,7 +217,7 @@ Napi::Value SeaDix::SearchBatch(const Napi::CallbackInfo &info) {
 		if (words.Get(i).IsString()) {
 			std::string word = words.Get(i).As<Napi::String>().Utf8Value();
 			std::string_view word_view(word);
-			bool found = trie_.search(word_view);
+			bool found = trie_->search(word_view);
 			results.Set(i, Napi::Boolean::New(env, found));
 		} else {
 			results.Set(i, Napi::Boolean::New(env, false));
@@ -235,7 +245,7 @@ Napi::Value SeaDix::RemoveBatch(const Napi::CallbackInfo &info) {
 		if (words.Get(i).IsString()) {
 			std::string word = words.Get(i).As<Napi::String>().Utf8Value();
 			std::string_view word_view(word);
-			bool removed = trie_.remove(word_view);
+			bool removed = trie_->remove(word_view);
 			results.Set(i, Napi::Boolean::New(env, removed));
 		} else {
 			results.Set(i, Napi::Boolean::New(env, false));
@@ -283,7 +293,7 @@ Napi::Value SeaDix::InsertFromFile(const Napi::CallbackInfo &info) {
 
 	try {
 		size_t words_inserted =
-			trie_.bulk_insert_from_file(file_path, buffer_size);
+			trie_->bulk_insert_from_file(file_path, buffer_size);
 		return Napi::Number::New(env, static_cast<double>(words_inserted));
 	} catch (const std::exception &e) {
 		Napi::Error::New(env,
@@ -298,7 +308,7 @@ Napi::Value SeaDix::GetHeightStats(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
 
 	try {
-		auto stats = trie_.get_height_stats();
+		auto stats = trie_->get_height_stats();
 
 		Napi::Object result = Napi::Object::New(env);
 		result.Set("minHeight", Napi::Number::New(env, stats.min_height));
@@ -329,7 +339,7 @@ Napi::Value SeaDix::GetMemoryStats(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
 
 	try {
-		auto stats = trie_.get_memory_stats();
+		auto stats = trie_->get_memory_stats();
 
 		Napi::Object result = Napi::Object::New(env);
 		result.Set(
@@ -360,7 +370,7 @@ Napi::Value SeaDix::GetWordMetrics(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
 
 	try {
-		auto metrics = trie_.get_word_metrics();
+		auto metrics = trie_->get_word_metrics();
 
 		Napi::Object result = Napi::Object::New(env);
 		result.Set("minLength", Napi::Number::New(env, metrics.min_length));
@@ -402,7 +412,7 @@ Napi::Value SeaDix::PatternSearch(const Napi::CallbackInfo &info) {
 
 	try {
 		std::string pattern = info[0].As<Napi::String>().Utf8Value();
-		std::vector<std::string> matches = trie_.pattern_search(pattern);
+		std::vector<std::string> matches = trie_->pattern_search(pattern);
 
 		// Convert results to JS array
 		Napi::Array result = Napi::Array::New(env, matches.size());
@@ -418,6 +428,44 @@ Napi::Value SeaDix::PatternSearch(const Napi::CallbackInfo &info) {
 			.ThrowAsJavaScriptException();
 		return env.Undefined();
 	}
+}
+
+// Get current arena size
+Napi::Value SeaDix::GetArenaSize(const Napi::CallbackInfo &info) {
+	Napi::Env env = info.Env();
+	return Napi::Number::New(env, trie_->getArenaSize());
+}
+
+// Set arena size (requires recreating the trie)
+Napi::Value SeaDix::SetArenaSize(const Napi::CallbackInfo &info) {
+	Napi::Env env = info.Env();
+	
+	if (info.Length() < 1 || !info[0].IsNumber()) {
+		Napi::TypeError::New(env, "Arena size must be a number")
+			.ThrowAsJavaScriptException();
+		return env.Undefined();
+	}
+	
+	size_t new_arena_size = info[0].As<Napi::Number>().Uint32Value();
+	
+	if (new_arena_size == 0) {
+		Napi::TypeError::New(env, "Arena size must be greater than 0")
+			.ThrowAsJavaScriptException();
+		return env.Undefined();
+	}
+	
+	// Store current data
+	std::vector<std::string> current_words = trie_->get_all_words();
+	
+	// Create new trie with new arena size
+	trie_ = std::make_unique<RadixTrie>(new_arena_size);
+	
+	// Re-insert all words
+	for (const auto& word : current_words) {
+		trie_->insert(word);
+	}
+	
+	return Napi::Boolean::New(env, true);
 }
 
 // Module initialization

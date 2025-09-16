@@ -12,8 +12,8 @@ const testWords: string[] = [
 	"dog", "door", "down", "download", "downward", "downstairs"
 ];
 
-// Create trie
-const trie = new SeaDix();
+// Create trie with optimal arena size for mixed operations
+const trie = new SeaDix(128 * 1024); // 128KB arena for mixed operations
 
 // Test insertion
 console.log("\n1. Insertion Test");
@@ -78,7 +78,7 @@ const individualInsertTime = Number(individualInsertEnd - individualInsertStart)
 console.log(`Individual inserts completed in ${individualInsertTime.toFixed(2)}ms`);
 
 const individualRemoveStart2 = process.hrtime.bigint();
-const removeResults2 = trie.removeMany(["test1", "test2", "test3", "test4", "test5"]);
+const removeResults2 = trie.removeBatch(["test1", "test2", "test3", "test4", "test5"]);
 const individualRemoveEnd2 = process.hrtime.bigint();
 const individualRemoveTime2 = Number(individualRemoveEnd2 - individualRemoveStart2) / 1000000;
 console.log(`Individual removes completed in ${individualRemoveTime2.toFixed(2)}ms`);
@@ -158,7 +158,7 @@ console.log("\n8. Batch Operations Test");
 console.log("-------------------------");
 
 // Create fresh trie for batch tests
-const batchTrie = new SeaDix();
+const batchTrie = new SeaDix(128 * 1024); // 128KB arena for batch operations
 const batchWords = Array.from({ length: 100 }, (_, i) => `batch${i}`);
 
 // Test batch insert vs individual insert

@@ -47,6 +47,10 @@ interface NativeSeaDix {
 		totalCharacters: number;
 	};
 	patternSearch(pattern: string): string[];
+	
+	// Arena management
+	getArenaSize(): number;
+	setArenaSize(size: number): boolean;
 }
 
 /**
@@ -102,16 +106,22 @@ export class SeaDix {
 	/**
    * Create a new SeaDix instance
    *
-   * @param options - Configuration options
+   * @param optionsOrArenaSize - Configuration options or arena size in bytes
    */
-	constructor(options: SeaDixOptions = {}) {
-		this.nativeTrie = new native.SeaDix();
-		this.ignoreCase = options.ignoreCase ?? false;
+	constructor(optionsOrArenaSize: SeaDixOptions | number = {}) {
+		// Check if first parameter is a number (arena size) or options object
+		if (typeof optionsOrArenaSize === 'number') {
+			this.nativeTrie = new native.SeaDix(optionsOrArenaSize);
+			this.ignoreCase = false;
+		} else {
+			this.nativeTrie = new native.SeaDix();
+			this.ignoreCase = optionsOrArenaSize.ignoreCase ?? false;
 
-		// Insert initial words if provided
-		if (options.words && options.words.length > 0) {
-			for (const word of options.words) {
-				this.insert(word);
+			// Insert initial words if provided
+			if (optionsOrArenaSize.words && optionsOrArenaSize.words.length > 0) {
+				for (const word of optionsOrArenaSize.words) {
+					this.insert(word);
+				}
 			}
 		}
 	}
@@ -169,6 +179,31 @@ export class SeaDix {
 			throw new TypeError("Pattern must be a string");
 		}
 		return this.nativeTrie.patternSearch(pattern);
+	}
+
+	/**
+	 * Get the current arena size in bytes
+	 * @returns Arena size in bytes
+	 */
+	getArenaSize(): number {
+		return this.nativeTrie.getArenaSize();
+	}
+
+	/**
+	 * Set the arena size and recreate the trie with existing data
+	 * @param size - New arena size in bytes
+	 * @returns True if successful, false otherwise
+	 * @throws {TypeError} If size is not a number
+	 * @throws {Error} If size is not greater than 0
+	 */
+	setArenaSize(size: number): boolean {
+		if (typeof size !== "number") {
+			throw new TypeError("Arena size must be a number");
+		}
+		if (size <= 0) {
+			throw new Error("Arena size must be greater than 0");
+		}
+		return this.nativeTrie.setArenaSize(size);
 	}
 
 	/**
@@ -364,7 +399,7 @@ export class SeaDix {
    *
    * @example
    * ```typescript
-   * trie.insertMany(['hello', 'help', 'world']);
+   * trie.insertBatch(['hello', 'help', 'world']);
    * console.log(trie.getWordsWithPrefix('he')); // ['hello', 'help']
    * ```
    */
@@ -435,26 +470,6 @@ export class SeaDix {
 		return this.nativeTrie.removeBatch(normalizedWords);
 	}
 
-	/**
-   * Remove multiple words from the trie
-   *
-   * @param words - Array of words to remove
-   * @returns Array of booleans indicating which words were successfully removed
-   * @throws {TypeError} If words is not an array
-   *
-   * @example
-   * ```typescript
-   * trie.insertMany(['hello', 'world']);
-   * const results = trie.removeMany(['hello', 'foo']); // [true, false]
-   * ```
-   */
-	removeMany(words: string[]): boolean[] {
-		if (!Array.isArray(words)) {
-			throw new TypeError("Words must be an array");
-		}
-
-		return words.map(word => this.remove(word));
-	}
 
 	/**
    * Check if the trie is empty
@@ -481,7 +496,7 @@ export class SeaDix {
    *
    * @example
    * ```typescript
-   * trie.insertMany(['hello', 'world']);
+   * trie.insertBatch(['hello', 'world']);
    * console.log(trie.size()); // 2
    * ```
    */
@@ -494,7 +509,7 @@ export class SeaDix {
    *
    * @example
    * ```typescript
-   * trie.insertMany(['hello', 'world']);
+   * trie.insertBatch(['hello', 'world']);
    * trie.clear();
    * console.log(trie.size()); // 0
    * ```

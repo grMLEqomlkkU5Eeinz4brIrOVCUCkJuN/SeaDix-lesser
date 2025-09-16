@@ -120,7 +120,7 @@ function runStableBenchmarks(): void {
 	// Core operations benchmark
 
 	// Analytics methods stable benchmarks
-	const trie = new SeaDix();
+	const trie = new SeaDix(1 * 1024 * 1024); // 1MB arena for analytics operations
 	["hello", "world", "test", "helmet", "helpful", "apple", "banana", "carrot"].forEach(word => trie.insert(word));
 
 	const analyticsBench = new StableBenchmark("Analytics Methods");
@@ -133,12 +133,12 @@ function runStableBenchmarks(): void {
 
 	// Single insert
 	coreBench.timeStable("Insert", () => {
-		const trie = new SeaDix();
+		const trie = new SeaDix(32 * 1024); // 32KB arena for single insert
 		trie.insert("testword");
 	}, 50, 15, 1000);
 
 	// Single search (existing)
-	const setupTrie = new SeaDix();
+	const setupTrie = new SeaDix(2 * 1024 * 1024); // 2MB arena for optimal search performance
 	setupTrie.insert("testword");
 	coreBench.timeStable("Search (hit)", () => {
 		setupTrie.search("testword");
@@ -158,18 +158,18 @@ function runStableBenchmarks(): void {
 
 	// Individual insertions
 	batchBench.timeStable("Individual Insert 100", () => {
-		const trie = new SeaDix();
+		const trie = new SeaDix(128 * 1024); // 128KB arena for individual operations
 		testWords.forEach(word => trie.insert(word));
 	}, 20, 10, 10);
 
 	// Batch insertions
 	batchBench.timeStable("Batch Insert 100", () => {
-		const trie = new SeaDix();
+		const trie = new SeaDix(128 * 1024); // 128KB arena for batch operations
 		trie.insertBatch(testWords);
 	}, 20, 10, 10);
 
 	// Setup for search tests
-	const searchTrie = new SeaDix();
+	const searchTrie = new SeaDix(2 * 1024 * 1024); // 2MB arena for optimal search performance
 	searchTrie.insertBatch(testWords);
 
 	// Individual searches

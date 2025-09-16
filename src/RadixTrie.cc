@@ -6,7 +6,9 @@
 #include <numeric>
 #include <unordered_map>
 
-RadixTrie::RadixTrie() : root(std::make_unique<Node>()), word_count_(0) {}
+RadixTrie::RadixTrie() : arena_(1024 * 1024), root(std::make_unique<Node>()), word_count_(0), arena_size_(1024 * 1024) {}
+
+RadixTrie::RadixTrie(size_t arena_size) : arena_(arena_size), root(std::make_unique<Node>()), word_count_(0), arena_size_(arena_size) {}
 
 RadixTrie::ChildVec::iterator RadixTrie::find_child(Node *node, char c) {
 	auto &v = node->children;
@@ -49,7 +51,7 @@ RadixTrie::Node *RadixTrie::find_node(std::string_view word) const {
 		}
 
 		Node *child = it->second.get();
-		const std::string &child_key = child->key;
+		const std::pmr::string &child_key = child->key;
 
 		if (pos + child_key.length() > word.length()) {
 			return nullptr; // Child key is longer than remaining word
@@ -176,7 +178,7 @@ void RadixTrie::collect_words_from_node(
 	if (!node)
 		return;
 
-	std::string full_word = prefix + node->key;
+	std::string full_word = prefix + std::string(node->key);
 
 	if (node->is_end) {
 		result.push_back(full_word);
@@ -201,7 +203,7 @@ void RadixTrie::insert(std::string_view word) {
 		if (it == current->children.end() || it->first != first_char) {
 			// No child with this first character, create new node
 			auto new_node = std::make_unique<Node>(
-				std::string(word.data() + pos, word.length() - pos), current,
+				std::pmr::string(word.data() + pos, word.length() - pos, &arena_), current,
 				first_char);
 			new_node->is_end = true;
 			current->children.insert(
@@ -211,7 +213,7 @@ void RadixTrie::insert(std::string_view word) {
 		}
 
 		Node *child = it->second.get();
-		const std::string &child_key = child->key;
+		const std::pmr::string &child_key = child->key;
 		std::string_view remaining(word.data() + pos, word.length() - pos);
 
 		size_t common_len = common_prefix_length(child_key, remaining);
@@ -269,7 +271,7 @@ bool RadixTrie::starts_with(std::string_view prefix) const {
 		}
 
 		Node *child = it->second.get();
-		const std::string &child_key = child->key;
+		const std::pmr::string &child_key = child->key;
 
 		if (pos + child_key.length() > prefix.length()) {
 			// Child key is longer than remaining prefix
@@ -314,7 +316,7 @@ RadixTrie::words_with_prefix(std::string_view prefix) const {
 		}
 
 		Node *child = it->second.get();
-		const std::string &child_key = child->key;
+		const std::pmr::string &child_key = child->key;
 
 		if (pos + child_key.length() > prefix.length()) {
 			// Child key is longer than remaining prefix
@@ -368,7 +370,7 @@ void RadixTrie::cleanup_orphaned_nodes(std::string_view word) {
 		}
 
 		Node *child = it->second.get();
-		const std::string &child_key = child->key;
+		const std::pmr::string &child_key = child->key;
 
 		if (pos + child_key.length() > word.length()) {
 			return; // Child key is longer than remaining word
@@ -432,12 +434,22 @@ void RadixTrie::clear() {
 	word_count_ = 0; // Reset counter
 }
 
+size_t RadixTrie::getArenaSize() const noexcept {
+	return arena_size_;
+}
+
+std::vector<std::string> RadixTrie::get_all_words() const {
+	std::vector<std::string> words;
+	collect_words_from_node(root.get(), "", words);
+	return words;
+}
+
 void RadixTrie::split_node(Node *current, char first_char, size_t common_len,
-						   const std::string &child_key,
+						   const std::pmr::string &child_key,
 						   std::string_view /* remaining */) {
 	// Create intermediate node with common prefix
-	auto intermediate =
-		std::make_unique<Node>(std::string(child_key.data(), common_len));
+		auto intermediate =
+		std::make_unique<Node>(std::pmr::string(child_key.data(), common_len, &arena_));
 	// Set parent linkage for the intermediate node
 	intermediate->parent = current;
 	intermediate->parent_char = first_char;
@@ -686,7 +698,7 @@ void RadixTrie::pattern_match_recursive(
 	if (!node)
 		return;
 
-	std::string full_word = current_word + node->key;
+	std::string full_word = current_word + std::string(node->key);
 
 	if (node->is_end && matches_pattern(full_word, pattern)) {
 		results.push_back(full_word);

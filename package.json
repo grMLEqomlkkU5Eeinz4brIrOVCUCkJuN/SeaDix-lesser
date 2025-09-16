@@ -23,6 +23,7 @@
     "benchmark:filet": "ts-node benchmark/file-stream-benchmarkt.ts",
     "benchmark:full": "ts-node benchmark/benchmark.ts",
     "benchmark:stable": "ts-node benchmark/stable-benchmarks.ts",
+    "benchmark:arena": "ts-node benchmark/arena-benchmark.ts",
     "format:cc": "find . -name \"*.cc\" -exec clang-format -i {} \\;",
     "format:all": "eslint . --fix && find . \\( -name \"*.cc\" -o -name \"*.cpp\" -o -name \"*.h\" \\) -exec clang-format -i {} \\;",
     "format": "find . \\( -name \"*.cc\" -o -name \"*.cpp\" -o -name \"*.h\" \\) -exec clang-format -i {} \\;",
@@ -45,11 +46,15 @@
     "prefix",
     "search",
     "autocomplete",
-    "performance"
+    "performance",
+    "experimental",
+    "n-api",
+    "arena-allocation",
+    "research"
   ],
   "author": "SeaDix Team",
   "license": "ISC",
-  "description": "A Radix Trie implementation for Node.js built with C++",
+  "description": "Experimental Radix Trie for Node.js exploring N-API performance and arena allocation (not for production use)",
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "@types/node": "^24.4.0",

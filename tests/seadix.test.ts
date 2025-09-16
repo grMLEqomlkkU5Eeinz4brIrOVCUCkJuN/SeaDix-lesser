@@ -31,6 +31,148 @@ describe("SeaDix", () => {
 			expect(trieCaseInsensitive.search("HELLO")).toBe(true);
 			expect(trieCaseInsensitive.search("HeLLo")).toBe(true);
 		});
+
+		test("should create trie with custom arena size", () => {
+			const customArenaSize = 512 * 1024; // 512KB
+			const trieWithCustomArena = new SeaDix(customArenaSize);
+
+			expect(trieWithCustomArena.getArenaSize()).toBe(customArenaSize);
+			expect(trieWithCustomArena.isEmpty()).toBe(true);
+		});
+
+		test("should use default arena size when no size provided", () => {
+			const defaultTrie = new SeaDix();
+			expect(defaultTrie.getArenaSize()).toBe(1024 * 1024); // 1MB default
+		});
+	});
+
+	describe("Arena Management", () => {
+		test("should get current arena size", () => {
+			const defaultTrie = new SeaDix();
+			expect(defaultTrie.getArenaSize()).toBe(1024 * 1024); // 1MB
+
+			const customTrie = new SeaDix(256 * 1024); // 256KB
+			expect(customTrie.getArenaSize()).toBe(256 * 1024);
+		});
+
+		test("should set arena size and preserve data", () => {
+			const trie = new SeaDix(512 * 1024); // Start with 512KB
+			
+			// Insert some data
+			["hello", "world", "test", "arena"].forEach(word => trie.insert(word));
+			expect(trie.size()).toBe(4);
+
+			// Change arena size
+			const newArenaSize = 1024 * 1024; // 1MB
+			const result = trie.setArenaSize(newArenaSize);
+
+			expect(result).toBe(true);
+			expect(trie.getArenaSize()).toBe(newArenaSize);
+			
+			// Verify data is preserved
+			expect(trie.size()).toBe(4);
+			expect(trie.search("hello")).toBe(true);
+			expect(trie.search("world")).toBe(true);
+			expect(trie.search("test")).toBe(true);
+			expect(trie.search("arena")).toBe(true);
+		});
+
+		test("should throw error for invalid arena size", () => {
+			const trie = new SeaDix();
+
+			expect(() => trie.setArenaSize(0)).toThrow("Arena size must be greater than 0");
+			expect(() => trie.setArenaSize(-1024)).toThrow("Arena size must be greater than 0");
+			expect(() => trie.setArenaSize("invalid" as any)).toThrow("Arena size must be a number");
+		});
+
+		test("should handle arena size changes with large datasets", () => {
+			const trie = new SeaDix(64 * 1024); // Start with 64KB
+			
+			// Insert a large dataset
+			const words = Array.from({ length: 1000 }, (_, i) => `word${i}`);
+			words.forEach(word => trie.insert(word));
+			expect(trie.size()).toBe(1000);
+
+			// Change to larger arena
+			const result = trie.setArenaSize(2 * 1024 * 1024); // 2MB
+			expect(result).toBe(true);
+			expect(trie.getArenaSize()).toBe(2 * 1024 * 1024);
+
+			// Verify all data is preserved
+			expect(trie.size()).toBe(1000);
+			words.forEach(word => {
+				expect(trie.search(word)).toBe(true);
+			});
+		});
+
+		test("should handle arena size changes with prefix operations", () => {
+			const trie = new SeaDix(128 * 1024); // 128KB
+			
+			// Insert words with common prefixes
+			["car", "card", "care", "careful", "cat", "dog", "door"].forEach(word => trie.insert(word));
+			expect(trie.size()).toBe(7);
+
+			// Test prefix operations before arena change
+			expect(trie.getWordsWithPrefix("car")).toEqual(expect.arrayContaining(["car", "card", "care", "careful"]));
+			expect(trie.getWordsWithPrefix("ca")).toEqual(expect.arrayContaining(["car", "card", "care", "careful", "cat"]));
+
+			// Change arena size
+			const result = trie.setArenaSize(512 * 1024); // 512KB
+			expect(result).toBe(true);
+
+			// Verify prefix operations still work
+			expect(trie.getWordsWithPrefix("car")).toEqual(expect.arrayContaining(["car", "card", "care", "careful"]));
+			expect(trie.getWordsWithPrefix("ca")).toEqual(expect.arrayContaining(["car", "card", "care", "careful", "cat"]));
+			expect(trie.getWordsWithPrefix("do")).toEqual(expect.arrayContaining(["dog", "door"]));
+		});
+
+		test("should handle arena size changes with pattern search", () => {
+			const trie = new SeaDix(64 * 1024); // 64KB
+			
+			// Insert words for pattern testing
+			["hello", "help", "helmet", "world", "test", "testing"].forEach(word => trie.insert(word));
+			expect(trie.size()).toBe(6);
+
+			// Test pattern search before arena change
+			const beforeResults = trie.patternSearch("he*");
+			expect(beforeResults).toEqual(expect.arrayContaining(["hello", "help", "helmet"]));
+
+			// Change arena size
+			const result = trie.setArenaSize(256 * 1024); // 256KB
+			expect(result).toBe(true);
+
+			// Verify pattern search still works
+			const afterResults = trie.patternSearch("he*");
+			expect(afterResults).toEqual(expect.arrayContaining(["hello", "help", "helmet"]));
+			expect(afterResults).toEqual(beforeResults);
+		});
+
+		test("should handle multiple arena size changes", () => {
+			const trie = new SeaDix(32 * 1024); // Start with 32KB
+			
+			// Insert initial data
+			["a", "b", "c"].forEach(word => trie.insert(word));
+			expect(trie.size()).toBe(3);
+
+			// First arena size change
+			expect(trie.setArenaSize(64 * 1024)).toBe(true);
+			expect(trie.getArenaSize()).toBe(64 * 1024);
+			expect(trie.size()).toBe(3);
+
+			// Add more data
+			["d", "e", "f"].forEach(word => trie.insert(word));
+			expect(trie.size()).toBe(6);
+
+			// Second arena size change
+			expect(trie.setArenaSize(128 * 1024)).toBe(true);
+			expect(trie.getArenaSize()).toBe(128 * 1024);
+			expect(trie.size()).toBe(6);
+
+			// Verify all data is preserved
+			["a", "b", "c", "d", "e", "f"].forEach(word => {
+				expect(trie.search(word)).toBe(true);
+			});
+		});
 	});
 
 	describe("Insert Operations", () => {
@@ -231,7 +373,7 @@ describe("SeaDix", () => {
 		});
 
 		test("should remove multiple words", () => {
-			const results = trie.removeMany(["hello", "xyz", "world"]);
+			const results = trie.removeBatch(["hello", "xyz", "world"]);
 
 			expect(results).toEqual([true, false, true]);
 			expect(trie.size()).toBe(2);
@@ -241,9 +383,9 @@ describe("SeaDix", () => {
 			expect(trie.search("test")).toBe(true);
 		});
 
-		test("should throw error for non-array in removeMany", () => {
-			expect(() => trie.removeMany(null as any)).toThrow("Words must be an array");
-			expect(() => trie.removeMany("not-array" as any)).toThrow("Words must be an array");
+		test("should throw error for non-array in removeBatch", () => {
+			expect(() => trie.removeBatch(null as any)).toThrow("Words must be an array");
+			expect(() => trie.removeBatch("not-array" as any)).toThrow("Words must be an array");
 		});
 	});
 

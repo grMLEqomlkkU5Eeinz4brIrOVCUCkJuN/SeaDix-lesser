@@ -95,35 +95,35 @@ function benchmarkInsertions(): Benchmark {
 
 	// Short words (minimal traversal)
 	const shortWordTime = benchmark.time(() => {
-		const trie = new SeaDix();
+		const trie = new SeaDix(64 * 1024); // 64KB arena for small operations
 		trie.insert("hi");
 	}, 1000);
 	benchmark.addResult("Short words (2 chars)", shortWordTime, 1000);
 
 	// Medium words (moderate traversal)
 	const mediumWordTime = benchmark.time(() => {
-		const trie = new SeaDix();
+		const trie = new SeaDix(128 * 1024); // 128KB arena for medium operations
 		trie.insert("hello");
 	}, 1000);
 	benchmark.addResult("Medium words (5 chars)", mediumWordTime, 1000);
 
 	// Long words (deep traversal)
 	const longWordTime = benchmark.time(() => {
-		const trie = new SeaDix();
+		const trie = new SeaDix(256 * 1024); // 256KB arena for long words
 		trie.insert("supercalifragilisticexpialidocious");
 	}, 1000);
 	benchmark.addResult("Long words (34 chars)", longWordTime, 1000);
 
 	// Words with common prefixes (tests node splitting)
 	const prefixWordTime = benchmark.time(() => {
-		const trie = new SeaDix();
+		const trie = new SeaDix(128 * 1024); // 128KB arena for prefix operations
 		trie.insert("application");
 	}, 1000);
 	benchmark.addResult("Prefix words (11 chars)", prefixWordTime, 1000);
 
 	// Random words (tests general performance)
 	const randomWordTime = benchmark.time(() => {
-		const trie = new SeaDix();
+		const trie = new SeaDix(128 * 1024); // 128KB arena for random operations
 		trie.insert("qwertyuiop");
 	}, 1000);
 	benchmark.addResult("Random words (10 chars)", randomWordTime, 1000);
@@ -138,7 +138,7 @@ function benchmarkDatasetTraversal(): Benchmark {
 	// Test 1: Words with no common prefixes (worst case for radix trie)
 	const noPrefixWords = ["apple", "banana", "cherry", "date", "elderberry"];
 	const noPrefixTime = benchmark.time(() => {
-		const trie = new SeaDix();
+		const trie = new SeaDix(64 * 1024); // 64KB arena for small datasets
 		noPrefixWords.forEach(word => trie.insert(word));
 	}, 100);
 	benchmark.addResult("No common prefixes (5 words)", noPrefixTime, 100 * noPrefixWords.length);
@@ -146,7 +146,7 @@ function benchmarkDatasetTraversal(): Benchmark {
 	// Test 2: Words with common prefixes (best case for radix trie)
 	const commonPrefixWords = ["application", "apply", "applied", "applicant", "applications"];
 	const commonPrefixTime = benchmark.time(() => {
-		const trie = new SeaDix();
+		const trie = new SeaDix(128 * 1024); // 128KB arena for prefix-heavy operations
 		commonPrefixWords.forEach(word => trie.insert(word));
 	}, 100);
 	benchmark.addResult("Common prefixes (5 words)", commonPrefixTime, 100 * commonPrefixWords.length);
@@ -154,7 +154,7 @@ function benchmarkDatasetTraversal(): Benchmark {
 	// Test 3: Mixed prefix scenario
 	const mixedPrefixWords = ["hello", "help", "world", "word", "test", "testing"];
 	const mixedPrefixTime = benchmark.time(() => {
-		const trie = new SeaDix();
+		const trie = new SeaDix(128 * 1024); // 128KB arena for mixed operations
 		mixedPrefixWords.forEach(word => trie.insert(word));
 	}, 100);
 	benchmark.addResult("Mixed prefixes (6 words)", mixedPrefixTime, 100 * mixedPrefixWords.length);
@@ -162,7 +162,7 @@ function benchmarkDatasetTraversal(): Benchmark {
 	// Test 4: Deep prefix sharing
 	const deepPrefixWords = ["a", "ab", "abc", "abcd", "abcde", "abcdef"];
 	const deepPrefixTime = benchmark.time(() => {
-		const trie = new SeaDix();
+		const trie = new SeaDix(64 * 1024); // 64KB arena for small deep prefix operations
 		deepPrefixWords.forEach(word => trie.insert(word));
 	}, 100);
 	benchmark.addResult("Deep prefix sharing (6 words)", deepPrefixTime, 100 * deepPrefixWords.length);
@@ -340,6 +340,7 @@ function benchmarkCaseSensitivity(): Benchmark {
 
 	// Case sensitive trie
 	const caseSensitiveTrie = new SeaDix({ ignoreCase: false });
+	caseSensitiveTrie.setArenaSize(128 * 1024); // 128KB arena for case sensitive operations
 	const caseSensitiveTime = benchmark.time(() => {
 		mediumDataset.forEach(word => caseSensitiveTrie.insert(word));
 	});
@@ -347,6 +348,7 @@ function benchmarkCaseSensitivity(): Benchmark {
 
 	// Case insensitive trie
 	const caseInsensitiveTrie = new SeaDix({ ignoreCase: true });
+	caseInsensitiveTrie.setArenaSize(128 * 1024); // 128KB arena for case insensitive operations
 	const caseInsensitiveTime = benchmark.time(() => {
 		mediumDataset.forEach(word => caseInsensitiveTrie.insert(word));
 	});
@@ -371,6 +373,7 @@ function benchmarkSerialization(): Benchmark {
 	const benchmark = new Benchmark("Serialization Performance");
 
 	const trie = new SeaDix({ words: mediumDataset, ignoreCase: true });
+	trie.setArenaSize(1 * 1024 * 1024); // 1MB arena for serialization operations
 
 	// toJSON performance
 	const toJsonTime = benchmark.time(() => {
@@ -400,7 +403,7 @@ function benchmarkMemory(): Benchmark {
 	const initialMemory = process.memoryUsage();
 
 	// Create a single trie with large dataset
-	const trie = new SeaDix();
+	const trie = new SeaDix(256 * 1024); // 256KB arena for memory benchmark
 	const insertTime = benchmark.time(() => {
 		largeDataset.forEach(word => trie.insert(word));
 	});
@@ -444,14 +447,14 @@ function benchmarkBatchOperations(): Benchmark {
 	const words = Array.from({ length: 1000 }, (_, i) => `word${i}`);
 
 	// Individual insertions
-	const individualTrie = new SeaDix();
+	const individualTrie = new SeaDix(128 * 1024); // 128KB arena for individual operations
 	const individualTime = benchmark.time(() => {
 		words.forEach(word => individualTrie.insert(word));
 	});
 	benchmark.addResult("Individual Insert (1000 words)", individualTime, words.length);
 
 	// Batch insertions
-	const batchTrie = new SeaDix();
+	const batchTrie = new SeaDix(128 * 1024); // 128KB arena for batch operations
 	const batchTime = benchmark.time(() => {
 		batchTrie.insertBatch(words);
 	});
@@ -504,14 +507,14 @@ function benchmarkBatchComparison(): Benchmark {
 		const words = Array.from({ length: size }, (_, i) => `test${i}`);
 
 		// Individual operations
-		const individualTrie = new SeaDix();
+		const individualTrie = new SeaDix(128 * 1024); // 128KB arena for individual operations
 		const individualTime = benchmark.time(() => {
 			words.forEach(word => individualTrie.insert(word));
 		});
 		benchmark.addResult(`Individual Insert (${size} words)`, individualTime, size);
 
 		// Batch operations
-		const batchTrie = new SeaDix();
+		const batchTrie = new SeaDix(128 * 1024); // 128KB arena for batch operations
 		const batchTime = benchmark.time(() => {
 			batchTrie.insertBatch(words);
 		});
@@ -539,44 +542,44 @@ function runAllBenchmarks(): void {
 	traversalBenchmark.printResults();
 
 	// Search benchmarks for different dataset sizes
-	const smallTrie = new SeaDix();
+	const smallTrie = new SeaDix(2 * 1024 * 1024); // 2MB arena for optimal search performance
 	smallDataset.forEach(word => smallTrie.insert(word));
 	const smallSearchBenchmark = benchmarkSearches(smallTrie, smallDataset, "Small Dataset");
 	smallSearchBenchmark.printResults();
 
-	const mediumTrie = new SeaDix();
+	const mediumTrie = new SeaDix(2 * 1024 * 1024); // 2MB arena for optimal search performance
 	mediumDataset.forEach(word => mediumTrie.insert(word));
 	const mediumSearchBenchmark = benchmarkSearches(mediumTrie, mediumDataset, "Medium Dataset");
 	mediumSearchBenchmark.printResults();
 
-	const largeTrie = new SeaDix();
+	const largeTrie = new SeaDix(2 * 1024 * 1024); // 2MB arena for optimal search performance
 	largeDataset.forEach(word => largeTrie.insert(word));
 	const largeSearchBenchmark = benchmarkSearches(largeTrie, largeDataset, "Large Dataset");
 	largeSearchBenchmark.printResults();
 
 	// Delete benchmarks
-	const smallDeleteTrie = new SeaDix();
+	const smallDeleteTrie = new SeaDix(1 * 1024 * 1024); // 1MB arena for delete operations
 	smallDataset.forEach(word => smallDeleteTrie.insert(word));
 	const smallDeleteBenchmark = benchmarkDeletes(smallDeleteTrie, smallDataset, "Small Dataset");
 	smallDeleteBenchmark.printResults();
 
-	const mediumDeleteTrie = new SeaDix();
+	const mediumDeleteTrie = new SeaDix(1 * 1024 * 1024); // 1MB arena for delete operations
 	mediumDataset.forEach(word => mediumDeleteTrie.insert(word));
 	const mediumDeleteBenchmark = benchmarkDeletes(mediumDeleteTrie, mediumDataset, "Medium Dataset");
 	mediumDeleteBenchmark.printResults();
 
-	const largeDeleteTrie = new SeaDix();
+	const largeDeleteTrie = new SeaDix(1 * 1024 * 1024); // 1MB arena for delete operations
 	largeDataset.forEach(word => largeDeleteTrie.insert(word));
 	const largeDeleteBenchmark = benchmarkDeletes(largeDeleteTrie, largeDataset, "Large Dataset");
 	largeDeleteBenchmark.printResults();
 
 	// Loop performance benchmarks
-	const loopTrie = new SeaDix();
+	const loopTrie = new SeaDix(128 * 1024); // 128KB arena for loop performance
 	const loopBenchmark = benchmarkLoopPerformance(loopTrie, mediumDataset, "Medium Dataset");
 	loopBenchmark.printResults();
 
 	// Utility operations benchmarks
-	const utilityTrie = new SeaDix();
+	const utilityTrie = new SeaDix(1 * 1024 * 1024); // 1MB arena for utility operations
 	mediumDataset.forEach(word => utilityTrie.insert(word));
 	const utilityBenchmark = benchmarkUtilityOperations(utilityTrie, mediumDataset, "Medium Dataset");
 	utilityBenchmark.printResults();

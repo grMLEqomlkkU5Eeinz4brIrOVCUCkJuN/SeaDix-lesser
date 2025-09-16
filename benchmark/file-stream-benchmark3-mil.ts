@@ -4,7 +4,7 @@ import { performance } from "perf_hooks";
 console.log("SeaDix File-Streaming Benchmark");
 console.log("==============================");
 
-const trie = new SeaDix();
+const trie = new SeaDix(4 * 1024 * 1024); // 4MB arena for very large file operations
 const filePath = "./words.txt";
 const bufferSize = 8 * 1024 * 1024; // 16MB buffer
 
