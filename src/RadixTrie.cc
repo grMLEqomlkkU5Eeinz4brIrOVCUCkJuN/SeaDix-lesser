@@ -176,7 +176,7 @@ std::string RadixTrie::build_prefix_from_node(const Node *node) const {
 // file streaming, but the user decides the size
 size_t RadixTrie::bulk_insert_from_file(const std::string &path,
 										size_t buffer_size) {
-	std::ifstream file(path, std::ios::binary);
+	std::ifstream file(path, std::ios::in);
 	if (!file.is_open()) {
 		throw std::runtime_error("File not found: " + path);
 	}
@@ -210,8 +210,6 @@ void RadixTrie::insert(std::string_view word) {
 			// No child with this first character, create new node
 			std::string_view remaining = word.substr(pos);
 			uint32_t key_offset = string_pool_.intern(remaining);
-			std::string_view key = string_pool_.get(
-				key_offset, static_cast<uint16_t>(remaining.length()));
 
 			auto new_node = std::make_unique<Node>(
 				key_offset, static_cast<uint16_t>(remaining.length()), current,
@@ -272,8 +270,6 @@ void RadixTrie::split_node(Node *current, char first_char, size_t common_len,
 	// Create intermediate node
 	std::string_view common_part = child_key.substr(0, common_len);
 	uint32_t common_offset = string_pool_.intern(common_part);
-	std::string_view common_key =
-		string_pool_.get(common_offset, static_cast<uint16_t>(common_len));
 
 	auto intermediate = std::make_unique<Node>(
 		common_offset, static_cast<uint16_t>(common_len), current, first_char);
@@ -282,8 +278,6 @@ void RadixTrie::split_node(Node *current, char first_char, size_t common_len,
 	// Update child to have remaining part
 	std::string_view child_remaining = child_key.substr(common_len);
 	uint32_t child_offset = string_pool_.intern(child_remaining);
-	std::string_view new_child_key = string_pool_.get(
-		child_offset, static_cast<uint16_t>(child_remaining.length()));
 
 	child->key_offset = child_offset;
 	child->key_length = static_cast<uint16_t>(child_remaining.length());
@@ -299,8 +293,6 @@ void RadixTrie::split_node(Node *current, char first_char, size_t common_len,
 	if (common_len < remaining.length()) {
 		std::string_view new_remaining = remaining.substr(common_len);
 		uint32_t new_offset = string_pool_.intern(new_remaining);
-		std::string_view new_key = string_pool_.get(
-			new_offset, static_cast<uint16_t>(new_remaining.length()));
 
 		auto new_node = std::make_unique<Node>(
 			new_offset, static_cast<uint16_t>(new_remaining.length()),
