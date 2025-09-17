@@ -113,12 +113,71 @@ RadixTrie::Node *RadixTrie::find_node(std::string_view word) const {
 	return current;
 }
 
+// Find node for prefix search - returns the node that represents the longest matching prefix
+RadixTrie::Node *RadixTrie::find_prefix_node(std::string_view prefix) const {
+	if (prefix.empty())
+		return root.get();
+
+	Node *current = root.get();
+	size_t pos = 0;
+
+	while (pos < prefix.length() && current) {
+		char first_char = prefix[pos];
+		auto it = find_child(current, first_char);
+
+		if (it == current->children.end()) {
+			return nullptr; // Path doesn't exist
+		}
+
+		Node *child = it->second.get();
+		std::string_view child_key = child->get_key(string_pool_);
+
+		// Check how much of the child key matches the remaining prefix
+		size_t match_len = common_prefix_length(prefix.substr(pos), child_key);
+		
+		if (match_len == 0) {
+			return nullptr; // No common prefix
+		}
+
+		// If we've matched the entire child key, move to the child
+		if (match_len == child_key.length()) {
+			pos += child_key.length();
+			current = child;
+		} else {
+			// Partial match - we can't go further, return nullptr
+			// This means the prefix doesn't match any complete path
+			return nullptr;
+		}
+	}
+
+	return current;
+}
+
+// Build the full prefix by traversing from the given node back to the root
+std::string RadixTrie::build_prefix_from_node(const Node *node) const {
+	if (!node || node == root.get()) {
+		return "";
+	}
+	
+	std::string result;
+	const Node *current = node;
+	
+	// Traverse back to root, collecting keys
+	while (current && current != root.get()) {
+		std::string_view key = current->get_key(string_pool_);
+		result = std::string(key) + result;
+		current = current->parent;
+	}
+	
+	return result;
+}
+
 // file streaming, but the user decides the size
 size_t RadixTrie::bulk_insert_from_file(const std::string &path,
 										size_t buffer_size) {
 	std::ifstream file(path, std::ios::binary);
 	if (!file.is_open()) {
-		return 0;
+		throw std::runtime_error("File not found: " + path);
 	}
 
 	std::string buffer;
@@ -188,14 +247,16 @@ void RadixTrie::insert(std::string_view word) {
 
 			if (pos == word.length()) {
 				// We've reached the end of the word
-				child->is_end = true;
-				++word_count_;
+				if (!child->is_end) {
+					child->is_end = true;
+					++word_count_;
+				}
 				return;
 			}
 		} else {
 			// Need to split the child
 			split_node(current, first_char, common_len, child_key, remaining);
-			return;
+				return;
 		}
 	}
 }
@@ -265,8 +326,10 @@ bool RadixTrie::starts_with(std::string_view prefix) const {
 		return !empty();
 	}
 
-	Node *node = find_node(prefix);
-	return node != nullptr;
+	// Use the same logic as words_with_prefix but just check if any words exist
+	std::vector<std::string> result;
+	collect_words_with_prefix_recursive(root.get(), "", std::string(prefix), result);
+	return !result.empty();
 }
 
 std::vector<std::string>
@@ -278,12 +341,43 @@ RadixTrie::words_with_prefix(std::string_view prefix) const {
 		return result;
 	}
 
-	Node *node = find_node(prefix);
-	if (node) {
-		collect_words_from_node(node, std::string(prefix), result);
-	}
+	// Use a different approach: collect all words and filter by prefix
+	collect_words_with_prefix_recursive(root.get(), "", std::string(prefix), result);
 
 	return result;
+}
+
+void RadixTrie::collect_words_with_prefix_recursive(
+	const Node *node, const std::string &current_word, const std::string &prefix,
+	std::vector<std::string> &result) const {
+	if (!node)
+		return;
+
+	// Check if current word starts with the prefix
+	if (current_word.length() >= prefix.length() && 
+		current_word.substr(0, prefix.length()) == prefix) {
+		if (node->is_end) {
+			result.push_back(current_word);
+		}
+	}
+
+	// Continue searching if current word is still a prefix of the target prefix
+	// or if current word already starts with the target prefix
+	bool should_continue = false;
+	if (current_word.length() < prefix.length()) {
+		// Current word is shorter than target prefix, check if it's still a prefix
+		should_continue = (prefix.substr(0, current_word.length()) == current_word);
+	} else {
+		// Current word is longer or equal, check if it starts with target prefix
+		should_continue = (current_word.substr(0, prefix.length()) == prefix);
+	}
+
+	if (should_continue) {
+		for (const auto &child_pair : node->children) {
+			std::string new_word = current_word + std::string(child_pair.second->get_key(string_pool_));
+			collect_words_with_prefix_recursive(child_pair.second.get(), new_word, prefix, result);
+		}
+	}
 }
 
 void RadixTrie::collect_words_from_node(
@@ -313,16 +407,16 @@ bool RadixTrie::remove(std::string_view word) {
 	--word_count_;
 
 	// Clean up orphaned nodes
-	cleanup_orphaned_nodes(word);
+	cleanup_orphaned_nodes(node);
 	return true;
 }
 
-void RadixTrie::cleanup_orphaned_nodes(std::string_view word) {
-	Node *current = find_node(word);
-	if (!current || current->is_end || !current->children.empty()) {
+void RadixTrie::cleanup_orphaned_nodes(Node *node) {
+	if (!node || node->is_end || !node->children.empty()) {
 		return; // Node is not orphaned
 	}
 
+	Node *current = node;
 	// Clean up from the current node back to the root using parent pointers
 	while (current != root.get()) {
 		Node *parent = current->parent;
@@ -336,12 +430,15 @@ void RadixTrie::cleanup_orphaned_nodes(std::string_view word) {
 			parent->children.erase(it);
 		}
 
+		// Move to parent and check if it can be removed
+		current = parent;
+		
 		// If the current node has no children and is not an end node, it
-		// can be removed
+		// can be removed, otherwise stop
 		if (current->children.empty() && !current->is_end) {
-			current = parent;
+			continue; // Continue cleaning up
 		} else {
-			break;
+			break; // Stop cleaning up
 		}
 	}
 }

@@ -58,9 +58,13 @@ class RadixTrie {
 	size_t common_prefix_length(std::string_view s1,
 								std::string_view s2) const noexcept;
 	Node *find_node(std::string_view word) const;
+	Node *find_prefix_node(std::string_view prefix) const;
+	std::string build_prefix_from_node(const Node *node) const;
 	void collect_words_from_node(const Node *node, const std::string &prefix,
 								 std::vector<std::string> &result) const;
-	void cleanup_orphaned_nodes(std::string_view word);
+	void collect_words_with_prefix_recursive(const Node *node, const std::string &current_word, 
+											 const std::string &prefix, std::vector<std::string> &result) const;
+	void cleanup_orphaned_nodes(Node *node);
 	void split_node(Node *current, char first_char, size_t common_len,
 					std::string_view child_key, std::string_view remaining);
 
