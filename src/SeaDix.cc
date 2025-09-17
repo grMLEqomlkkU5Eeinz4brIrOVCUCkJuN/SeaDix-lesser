@@ -21,26 +21,28 @@ SeaDix::SeaDix(const Napi::CallbackInfo &info)
 Napi::Object SeaDix::Init(Napi::Env env, Napi::Object exports) {
 	Napi::Function func = DefineClass(
 		env, "SeaDix",
-		{InstanceMethod("insert", &SeaDix::Insert),
-		 InstanceMethod("insertBatch", &SeaDix::InsertBatch),
-		 InstanceMethod("insertFromFile", &SeaDix::InsertFromFile),
-		 InstanceMethod("search", &SeaDix::Search),
-		 InstanceMethod("searchBatch", &SeaDix::SearchBatch),
-		 InstanceMethod("startsWith", &SeaDix::StartsWith),
-		 InstanceMethod("wordsWithPrefix", &SeaDix::WordsWithPrefix),
-		 InstanceMethod("remove", &SeaDix::Remove),
-		 InstanceMethod("removeBatch", &SeaDix::RemoveBatch),
-		 InstanceMethod("empty", &SeaDix::Empty),
-		 InstanceMethod("size", &SeaDix::Size),
-		 InstanceMethod("clear", &SeaDix::Clear),
-		 // New analytics methods
-		 InstanceMethod("getHeightStats", &SeaDix::GetHeightStats),
-		 InstanceMethod("getMemoryStats", &SeaDix::GetMemoryStats),
-		 InstanceMethod("getWordMetrics", &SeaDix::GetWordMetrics),
-		 InstanceMethod("patternSearch", &SeaDix::PatternSearch),
-		 // Arena management methods
-		 InstanceMethod("getArenaSize", &SeaDix::GetArenaSize),
-		 InstanceMethod("setArenaSize", &SeaDix::SetArenaSize)});
+		{
+			InstanceMethod("insert", &SeaDix::Insert),
+			InstanceMethod("insertBatch", &SeaDix::InsertBatch),
+			InstanceMethod("insertFromFile", &SeaDix::InsertFromFile),
+			InstanceMethod("search", &SeaDix::Search),
+			InstanceMethod("searchBatch", &SeaDix::SearchBatch),
+			InstanceMethod("startsWith", &SeaDix::StartsWith),
+			InstanceMethod("wordsWithPrefix", &SeaDix::WordsWithPrefix),
+			InstanceMethod("remove", &SeaDix::Remove),
+			InstanceMethod("removeBatch", &SeaDix::RemoveBatch),
+			InstanceMethod("empty", &SeaDix::Empty),
+			InstanceMethod("size", &SeaDix::Size),
+			InstanceMethod("clear", &SeaDix::Clear),
+			// New analytics methods
+			InstanceMethod("getHeightStats", &SeaDix::GetHeightStats),
+			InstanceMethod("getMemoryStats", &SeaDix::GetMemoryStats),
+			InstanceMethod("getWordMetrics", &SeaDix::GetWordMetrics),
+			InstanceMethod("patternSearch", &SeaDix::PatternSearch),
+			// Arena management methods
+			InstanceMethod("getArenaSize", &SeaDix::GetArenaSize),
+			InstanceMethod("setArenaSize", &SeaDix::SetArenaSize),
+		});
 
 	constructor = Napi::Persistent(func);
 	constructor.SuppressDestruct();

@@ -51,6 +51,7 @@ interface NativeSeaDix {
 	// Arena management
 	getArenaSize(): number;
 	setArenaSize(size: number): boolean;
+	
 }
 
 /**
@@ -205,6 +206,7 @@ export class SeaDix {
 		}
 		return this.nativeTrie.setArenaSize(size);
 	}
+
 
 	/**
    * Normalize a word based on case sensitivity settings

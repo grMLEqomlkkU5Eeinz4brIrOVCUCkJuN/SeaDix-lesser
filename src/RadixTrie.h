@@ -9,25 +9,48 @@
 
 class RadixTrie {
   private:
-	struct Node {
-		std::pmr::string key;
-		bool is_end = false;
-		Node *parent = nullptr;
-		char parent_char = '\0';
-		std::pmr::vector<std::pair<char, std::unique_ptr<Node>>> children;
+	// Simple string pool for memory efficiency
+	struct StringPool {
+		std::vector<char> data;
+		size_t next_offset = 0;
 
-		Node() = default;
-		explicit Node(std::pmr::string k) : key(std::move(k)) {}
-		explicit Node(std::pmr::string k, Node *p, char pc)
-			: key(std::move(k)), parent(p), parent_char(pc) {}
+		uint32_t intern(std::string_view str);
+		std::string_view get(uint32_t offset, uint16_t length) const;
+		void clear() {
+			data.clear();
+			next_offset = 0;
+		}
+	};
+
+	// Optimized Node structure - much more compact
+	struct Node {
+		uint32_t key_offset;	 // 4 bytes - offset in string pool
+		uint16_t key_length;	 // 2 bytes - length of key
+		bool is_end = false;	 // 1 byte
+		Node *parent = nullptr;	 // 8 bytes
+		char parent_char = '\0'; // 1 byte
+		std::vector<std::pair<char, std::unique_ptr<Node>>>
+			children; // Sorted vector
+
+		Node() : key_offset(0), key_length(0) {}
+		explicit Node(uint32_t offset, uint16_t length)
+			: key_offset(offset), key_length(length) {}
+		explicit Node(uint32_t offset, uint16_t length, Node *p, char pc)
+			: key_offset(offset), key_length(length), parent(p),
+			  parent_char(pc) {}
+
+		std::string_view get_key(const StringPool &pool) const {
+			return pool.get(key_offset, key_length);
+		}
 	};
 
 	std::pmr::monotonic_buffer_resource arena_;
+	StringPool string_pool_;
 	std::unique_ptr<Node> root;
 	size_t word_count_;
 	size_t arena_size_; // Store arena size for getArenaSize()
 
-	using ChildVec = std::pmr::vector<std::pair<char, std::unique_ptr<Node>>>;
+	using ChildVec = std::vector<std::pair<char, std::unique_ptr<Node>>>;
 	static ChildVec::iterator find_child(Node *node, char c);
 	static ChildVec::const_iterator find_child(const Node *node, char c);
 
@@ -39,8 +62,7 @@ class RadixTrie {
 								 std::vector<std::string> &result) const;
 	void cleanup_orphaned_nodes(std::string_view word);
 	void split_node(Node *current, char first_char, size_t common_len,
-					const std::pmr::string &child_key,
-					std::string_view remaining);
+					std::string_view child_key, std::string_view remaining);
 
 	// New helper methods for analytics
 	void calculate_heights_recursive(const Node *node, int current_depth,
@@ -99,6 +121,7 @@ class RadixTrie {
 
 	// Arena management
 	size_t getArenaSize() const noexcept;
+	bool setArenaSize(size_t new_size);
 
 	// Get all words (for arena resizing)
 	std::vector<std::string> get_all_words() const;
