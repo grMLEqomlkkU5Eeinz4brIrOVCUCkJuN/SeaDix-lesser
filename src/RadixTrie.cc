@@ -30,15 +30,22 @@ uint32_t RadixTrie::StringPool::intern(std::string_view str) {
 	if (str.empty())
 		return 0;
 
+	// Check if already interned
+	auto it = intern_map.find(std::string(str));
+	if (it != intern_map.end()) {
+		return it->second;
+	}
+
 	uint32_t offset = static_cast<uint32_t>(next_offset);
 	data.resize(next_offset + str.length());
 	memcpy(data.data() + next_offset, str.data(), str.length());
 	next_offset += str.length();
+	intern_map.emplace(std::string(str), offset);
 	return offset;
 }
 
 std::string_view RadixTrie::StringPool::get(uint32_t offset,
-											uint16_t length) const {
+												uint16_t length) const {
 	if (offset >= data.size()) {
 		return {};
 	}
@@ -58,7 +65,7 @@ RadixTrie::ChildVec::iterator RadixTrie::find_child(Node *node, char c) {
 }
 
 RadixTrie::ChildVec::const_iterator RadixTrie::find_child(const Node *node,
-														  char c) {
+																  char c) {
 	auto it = std::lower_bound(
 		node->children.begin(), node->children.end(),
 		std::make_pair(c, nullptr),
@@ -70,7 +77,7 @@ RadixTrie::ChildVec::const_iterator RadixTrie::find_child(const Node *node,
 }
 
 size_t RadixTrie::common_prefix_length(std::string_view s1,
-									   std::string_view s2) const noexcept {
+										   std::string_view s2) const noexcept {
 	size_t i = 0;
 	const size_t min_len = std::min(s1.length(), s2.length());
 	while (i < min_len && s1[i] == s2[i]) {
@@ -175,7 +182,7 @@ std::string RadixTrie::build_prefix_from_node(const Node *node) const {
 
 // file streaming, but the user decides the size
 size_t RadixTrie::bulk_insert_from_file(const std::string &path,
-										size_t buffer_size) {
+											size_t buffer_size) {
 	std::ifstream file(path, std::ios::in);
 	if (!file.is_open()) {
 		throw std::runtime_error("File not found: " + path);
@@ -261,8 +268,8 @@ void RadixTrie::insert(std::string_view word) {
 }
 
 void RadixTrie::split_node(Node *current, char first_char, size_t common_len,
-						   std::string_view child_key,
-						   std::string_view remaining) {
+							 std::string_view child_key,
+							 std::string_view remaining) {
 	// Find the child to split
 	auto it = find_child(current, first_char);
 	Node *child = it->second.get();
@@ -322,7 +329,7 @@ bool RadixTrie::starts_with(std::string_view prefix) const {
 	// Use the same logic as words_with_prefix but just check if any words exist
 	std::vector<std::string> result;
 	collect_words_with_prefix_recursive(root.get(), "", std::string(prefix),
-										result);
+											result);
 	return !result.empty();
 }
 
@@ -337,7 +344,7 @@ RadixTrie::words_with_prefix(std::string_view prefix) const {
 
 	// Use a different approach: collect all words and filter by prefix
 	collect_words_with_prefix_recursive(root.get(), "", std::string(prefix),
-										result);
+											result);
 
 	return result;
 }
@@ -376,7 +383,7 @@ void RadixTrie::collect_words_with_prefix_recursive(
 				current_word +
 				std::string(child_pair.second->get_key(string_pool_));
 			collect_words_with_prefix_recursive(child_pair.second.get(),
-												new_word, prefix, result);
+													new_word, prefix, result);
 		}
 	}
 }
@@ -504,7 +511,7 @@ RadixTrie::HeightStats RadixTrie::get_height_stats() const {
 }
 
 void RadixTrie::calculate_heights_recursive(const Node *node, int current_depth,
-											std::vector<int> &heights) const {
+												 std::vector<int> &heights) const {
 	if (!node)
 		return;
 
@@ -514,7 +521,7 @@ void RadixTrie::calculate_heights_recursive(const Node *node, int current_depth,
 
 	for (const auto &child_pair : node->children) {
 		calculate_heights_recursive(child_pair.second.get(), current_depth + 1,
-									heights);
+										heights);
 	}
 }
 
@@ -619,7 +626,7 @@ void RadixTrie::collect_word_lengths_recursive(
 
 // Pattern matching
 bool RadixTrie::matches_pattern(const std::string &word,
-								const std::string &pattern) const {
+								  const std::string &pattern) const {
 	size_t word_idx = 0, pattern_idx = 0;
 	size_t word_len = word.length(), pattern_len = pattern.length();
 

@@ -6,6 +6,7 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include <unordered_map>
 
 class RadixTrie {
   private:
@@ -13,12 +14,14 @@ class RadixTrie {
 	struct StringPool {
 		std::vector<char> data;
 		size_t next_offset = 0;
+		std::unordered_map<std::string, uint32_t> intern_map;
 
 		uint32_t intern(std::string_view str);
 		std::string_view get(uint32_t offset, uint16_t length) const;
 		void clear() {
 			data.clear();
 			next_offset = 0;
+			intern_map.clear();
 		}
 	};
 
