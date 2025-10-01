@@ -1,8 +1,6 @@
 #pragma once
-#include <functional>
 #include <memory>
 #include <memory_resource>
-#include <regex>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -12,9 +10,12 @@ class RadixTrie {
   private:
 	// Simple string pool for memory efficiency
 	struct StringPool {
-		std::vector<char> data;
+		std::pmr::vector<char> data;
 		size_t next_offset = 0;
-		std::unordered_map<std::string, uint32_t> intern_map;
+		std::pmr::unordered_map<std::pmr::string, uint32_t> intern_map;
+
+		explicit StringPool(std::pmr::memory_resource *mr)
+			: data(mr), intern_map(mr) {}
 
 		uint32_t intern(std::string_view str);
 		std::string_view get(uint32_t offset, uint16_t length) const;
@@ -32,15 +33,17 @@ class RadixTrie {
 		bool is_end = false;	 // 1 byte
 		Node *parent = nullptr;	 // 8 bytes
 		char parent_char = '\0'; // 1 byte
-		std::vector<std::pair<char, std::unique_ptr<Node>>>
-			children; // Sorted vector
+		std::pmr::vector<std::pair<char, std::unique_ptr<Node>>>
+			children; // Sorted vector (pmr-backed)
 
-		Node() : key_offset(0), key_length(0) {}
-		explicit Node(uint32_t offset, uint16_t length)
-			: key_offset(offset), key_length(length) {}
-		explicit Node(uint32_t offset, uint16_t length, Node *p, char pc)
+		Node(std::pmr::memory_resource *mr)
+			: key_offset(0), key_length(0), children(mr) {}
+		explicit Node(uint32_t offset, uint16_t length, std::pmr::memory_resource *mr)
+			: key_offset(offset), key_length(length), children(mr) {}
+		explicit Node(uint32_t offset, uint16_t length, Node *p, char pc,
+				  std::pmr::memory_resource *mr)
 			: key_offset(offset), key_length(length), parent(p),
-			  parent_char(pc) {}
+			  parent_char(pc), children(mr) {}
 
 		std::string_view get_key(const StringPool &pool) const {
 			return pool.get(key_offset, key_length);
@@ -53,7 +56,7 @@ class RadixTrie {
 	size_t word_count_;
 	size_t arena_size_; // Store arena size for getArenaSize()
 
-	using ChildVec = std::vector<std::pair<char, std::unique_ptr<Node>>>;
+	using ChildVec = std::pmr::vector<std::pair<char, std::unique_ptr<Node>>>;
 	static ChildVec::iterator find_child(Node *node, char c);
 	static ChildVec::const_iterator find_child(const Node *node, char c);
 

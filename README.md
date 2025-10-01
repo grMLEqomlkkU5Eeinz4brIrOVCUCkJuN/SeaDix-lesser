@@ -1,15 +1,15 @@
-# SeaDix
+# Seadix-lesser (compact build)
 
 > **⚠️ Experimental Project**: This is a research/experimental project for exploring N-API performance and memory optimization techniques. It is **not recommended for production use**.
 
-A Radix Trie for Node.js built with C++, exploring arena allocation and N-API optimization techniques. This project is for educational purposes and experimentation only.
+Seadix-lesser is a compact-memory build/profile of the SeaDix Radix Trie for Node.js, built with C++, exploring arena allocation and N-API optimization techniques. This project is for educational purposes and experimentation only.
 
 The reason why I chose to make this was simple. It facinated me how there were many people using pure js solutions which often times resulted in performance penalties. At the same time I have not only never tried C++ (prior to this project), but also never really tried bindings like N-API before.
 
 ## Usage
 
 ```javascript
-const SeaDix = require('seadix');
+const SeaDix = require('seadix-lesser');
 
 // Default constructor (1MB arena)
 const trie = new SeaDix();
@@ -67,15 +67,17 @@ trie.setArenaSize(2 * 1024 * 1024); // Change to 2MB arena
 - `getWordMetrics()` - Word statistics
 - `patternSearch(pattern)` - Wildcard search (`*`, `?`)
 
-## Performance
+## Performance (compact build)
 
 **Test Environment**: Intel i5-4210U mobile CPU, IDE running, balanced power plan
 
-Recent benchmarks on mixed unigram/bigram/unicode datasets:
-- **Memory**: 114-146 bytes per word (high overhead due to experimental memory management)
-- **Insert**: 644K-1.5M ops/sec (varies significantly with arena size)
-- **Search**: 2.9M-3.3M ops/sec (varies significantly with arena size)
-- **File load**: 1.9s for 3M words, 2.8s for 6M words
+Recent benchmarks (this build) on mixed unigram/bigram/unicode datasets:
+- **Memory**: ~118 bytes per word on 6.27M words (file-stream), total ~706MB
+- **Insert (micro)**: 139K–166K ops/sec (short/prefix words), 70K–124K on longer words
+- **Search (micro)**: up to ~4.0M ops/sec (single search x1000)
+- **Delete (micro)**: up to ~4.1M ops/sec (single delete x1000)
+- **Stable suite (stats)**: Insert ~195K ops/sec mean; Search hit ~5.41M ops/sec mean
+- **File load (6.27M words)**: 7.06s; export JSON 8.61s; import JSON 10.65s
 
 **Note**: Performance varies significantly due to mobile CPU thermal throttling and experimental memory management techniques.
 

@@ -1,5 +1,5 @@
 {
-  "name": "seadix",
+  "name": "seadix-lesser",
   "version": "1.0.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -54,7 +54,7 @@
   ],
   "author": "SeaDix Team",
   "license": "ISC",
-  "description": "Experimental Radix Trie for Node.js exploring N-API performance and arena allocation (not for production use)",
+  "description": "Seadix-lesser: compact-memory build of the SeaDix Radix Trie (experimental, not for production)",
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "@types/node": "^24.4.0",

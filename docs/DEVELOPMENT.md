@@ -1,4 +1,4 @@
-# Development
+# Development (Seadix-lesser)
 
 ## Build
 
@@ -18,7 +18,7 @@ npm run test:watch   # Watch mode
 ## Benchmark
 
 ```bash
-npm run benchmark:stable  # Stable benchmark
+npm run benchmark:stable  # Stable benchmark (compact build numbers)
 npm run benchmark:file3   # File benchmark
 npm run cpp:test:o2       # C++ test
 ```

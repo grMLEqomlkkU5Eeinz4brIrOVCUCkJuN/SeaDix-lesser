@@ -1,4 +1,4 @@
-# Performance
+# Performance (Seadix-lesser compact build)
 
 > **⚠️ Experimental Project**: This is a research/experimental project for exploring N-API performance and memory optimization techniques. It is **not recommended for production use**.
 
@@ -14,7 +14,7 @@
 | Dataset | Words | Memory | Bytes/Word | Overhead | Notes |
 |---------|-------|--------|------------|----------|-------|
 | 3M words| 3,080,821| 335.61MB  | 114.23B       | 98%      | Clean dataset |
-| 6M words| 6,273,234| 874.07MB  | 146.10B       | 95%      | **Mixed unigram/bigram/unicode** |
+| 6.27M words (this build)| 6,273,234| 706.25MB  | 118.05B | ~?      | **Mixed unigram/bigram/unicode** |
 
 *The 6M dataset contains mixed unigram, bigram, and unicode characters, making it particularly challenging for radix trie optimization. This explains the higher memory overhead compared to clean word lists.*
 
@@ -63,9 +63,9 @@ The high memory overhead (95-98%) in SeaDix is primarily due to the experimental
 ### Core Operations (with system variance)
 | Operation | Small Dataset | Medium Dataset | Large Dataset |
 |-----------|---------------|----------------|---------------|
-| Insert    | 958K ops/sec  | 727K-861K      | 195K-783K     |
-| Search    | 4.07M ops/sec | 1.45M ops/sec  | 2.65K-1.62K   |
-| Remove    | 1.36M ops/sec | 1.86M-2.16M    | 1.03M-1.72M   |
+| Insert    | 139K-166K     | 124K           | 70K-124K      |
+| Search    | ~4.0M (single x1000) | ~3.38M (single x1000) | ~2.66M (single x1000) |
+| Remove    | ~3.74M-4.09M  | ~3.92M         | ~4.09M        |
 
 *Performance varies significantly due to mobile CPU thermal throttling and background processes*
 
@@ -86,15 +86,14 @@ The high memory overhead (95-98%) in SeaDix is primarily due to the experimental
 ### File Loading
 | File Size | Time | Rate | Arena Size |
 |-----------|------|------|------------|
-| 3M words  | 1.61s | 1.91M words/s | 4MB |
-| 6M words  | 2.13s | 2.95M words/s | 8MB |
+| 6.27M words | 7.06s | 0.89M words/s | 2MB buffer |
 
 ## N-API Overhead Analysis
 
 | Operation | Pure C++ | Node.js | Overhead |
 |-----------|----------|---------|----------|
-| Insert    | ~2.5M/sec | 958K/sec| **2.6x slower** |
-| Search    | ~7.9M/sec | 4.07M/sec| **1.9x slower** |
+| Insert    | ~2.5M/sec | ~0.20M/sec| ~12.5x slower (compact build config) |
+| Search    | ~7.9M/sec | ~4-5.4M/sec| ~1.5-2.0x slower |
 
 *N-API overhead includes string conversion, function marshalling, and memory management. This is expected for experimental N-API projects.*
 

@@ -1,4 +1,4 @@
-# API Reference
+# API Reference (Seadix-lesser)
 
 > **⚠️ Experimental Project**: This is a research/experimental project for exploring N-API performance and memory optimization techniques. It is **not recommended for production use**.
 

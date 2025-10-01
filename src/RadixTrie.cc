@@ -1,28 +1,28 @@
 #include "RadixTrie.h"
 #include <algorithm>
-#include <cctype>
-#include <cmath>
 #include <cstring>
 #include <fstream>
 #include <numeric>
 #include <unordered_map>
 
 RadixTrie::RadixTrie()
-	: arena_(1024 * 1024), word_count_(0), arena_size_(1024 * 1024) {
+	: arena_(1024 * 1024), string_pool_(&arena_), word_count_(0),
+	  arena_size_(1024 * 1024) {
 	// Initialize string pool
 	string_pool_.data.reserve(1024 * 1024);
 
 	// Create root node
-	root = std::make_unique<Node>();
+	root = std::make_unique<Node>(&arena_);
 }
 
 RadixTrie::RadixTrie(size_t arena_size)
-	: arena_(arena_size), word_count_(0), arena_size_(arena_size) {
+	: arena_(arena_size), string_pool_(&arena_), word_count_(0),
+	  arena_size_(arena_size) {
 	// Initialize string pool
 	string_pool_.data.reserve(arena_size / 2);
 
 	// Create root node
-	root = std::make_unique<Node>();
+	root = std::make_unique<Node>(&arena_);
 }
 
 // StringPool implementation
@@ -30,8 +30,9 @@ uint32_t RadixTrie::StringPool::intern(std::string_view str) {
 	if (str.empty())
 		return 0;
 
-	// Check if already interned
-	auto it = intern_map.find(std::string(str));
+	// Create a single pmr::string key and reuse for find/emplace
+	std::pmr::string key{str.begin(), str.end(), data.get_allocator().resource()};
+	auto it = intern_map.find(key);
 	if (it != intern_map.end()) {
 		return it->second;
 	}
@@ -40,7 +41,8 @@ uint32_t RadixTrie::StringPool::intern(std::string_view str) {
 	data.resize(next_offset + str.length());
 	memcpy(data.data() + next_offset, str.data(), str.length());
 	next_offset += str.length();
-	intern_map.emplace(std::string(str), offset);
+	// Store key with move to avoid another allocation/copy
+	intern_map.emplace(std::move(key), offset);
 	return offset;
 }
 
@@ -54,6 +56,17 @@ std::string_view RadixTrie::StringPool::get(uint32_t offset,
 
 // Helper methods for tree traversal
 RadixTrie::ChildVec::iterator RadixTrie::find_child(Node *node, char c) {
+	// For small child counts, a linear scan is usually faster
+	if (node->children.size() <= 8) {
+		for (auto it = node->children.begin(); it != node->children.end(); ++it) {
+			if (it->first == c) {
+				return it;
+			}
+		}
+		return node->children.end();
+	}
+
+	// Fall back to binary search for larger child vectors
 	auto it = std::lower_bound(
 		node->children.begin(), node->children.end(),
 		std::make_pair(c, nullptr),
@@ -65,7 +78,18 @@ RadixTrie::ChildVec::iterator RadixTrie::find_child(Node *node, char c) {
 }
 
 RadixTrie::ChildVec::const_iterator RadixTrie::find_child(const Node *node,
-																  char c) {
+									  char c) {
+	// Linear scan for small child counts
+	if (node->children.size() <= 8) {
+		for (auto it = node->children.begin(); it != node->children.end(); ++it) {
+			if (it->first == c) {
+				return it;
+			}
+		}
+		return node->children.end();
+	}
+
+	// Binary search otherwise
 	auto it = std::lower_bound(
 		node->children.begin(), node->children.end(),
 		std::make_pair(c, nullptr),
@@ -220,7 +244,7 @@ void RadixTrie::insert(std::string_view word) {
 
 			auto new_node = std::make_unique<Node>(
 				key_offset, static_cast<uint16_t>(remaining.length()), current,
-				first_char);
+				first_char, &arena_);
 			new_node->is_end = true;
 
 			// Insert in sorted order
@@ -279,7 +303,8 @@ void RadixTrie::split_node(Node *current, char first_char, size_t common_len,
 	uint32_t common_offset = string_pool_.intern(common_part);
 
 	auto intermediate = std::make_unique<Node>(
-		common_offset, static_cast<uint16_t>(common_len), current, first_char);
+		common_offset, static_cast<uint16_t>(common_len), current, first_char,
+		&arena_);
 	intermediate->is_end = (common_len == remaining.length());
 
 	// Update child to have remaining part
@@ -304,7 +329,7 @@ void RadixTrie::split_node(Node *current, char first_char, size_t common_len,
 		auto new_node = std::make_unique<Node>(
 			new_offset, static_cast<uint16_t>(new_remaining.length()),
 			intermediate.get(),
-			new_remaining.empty() ? '\0' : new_remaining[0]);
+			new_remaining.empty() ? '\0' : new_remaining[0], &arena_);
 		new_node->is_end = true;
 		intermediate->children.push_back(
 			std::make_pair(new_remaining.empty() ? '\0' : new_remaining[0],
@@ -456,7 +481,7 @@ bool RadixTrie::empty() const noexcept { return word_count_ == 0; }
 size_t RadixTrie::size() const noexcept { return word_count_; }
 
 void RadixTrie::clear() {
-	root = std::make_unique<Node>();
+	root = std::make_unique<Node>(&arena_);
 	word_count_ = 0;
 	string_pool_.clear();
 }
