@@ -2,6 +2,8 @@
 
 > **⚠️ Experimental Project**: This is a research/experimental project for exploring N-API performance and memory optimization techniques. It is **not recommended for production use**.
 
+Currently: I am working on 2 proper builds to publish as NPM libraries. 1 being a more CPU throughput focused one and another being more memory optimized one.
+
 Seadix-lesser is a compact-memory build/profile of the SeaDix Radix Trie for Node.js, built with C++, exploring arena allocation and N-API optimization techniques. This project is for educational purposes and experimentation only.
 
 The reason why I chose to make this was simple. It facinated me how there were many people using pure js solutions which often times resulted in performance penalties. At the same time I have not only never tried C++ (prior to this project), but also never really tried bindings like N-API before.
